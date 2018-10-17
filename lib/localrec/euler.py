@@ -58,7 +58,7 @@ def euler_from_vector(vector):
     
     if abs(vector.x()) < 0.00001 and abs(vector.y()) < 0.00001:
         rot = radians(0.00)
-        tilt = radians(0.00)
+        tilt = acos(vector.z())
     else:
         rot = atan2(vector.y(), vector.x())
         tilt = acos(vector.z())
