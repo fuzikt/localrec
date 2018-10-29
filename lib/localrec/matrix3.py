@@ -27,8 +27,6 @@ import os
 import sys
 from math import *
 
-from pyworkflow.em import runProgram
-
 class Matrix3:
     """define Matrix3 class and method to obtain individual matrices from lists with 9 values"""
 
@@ -71,14 +69,21 @@ class Matrix3:
         print("%.6f\t"%(m[2][2]))
 
 
-def run_command(command, output=""):
+def run_command(command, output, library_path):
+    import subprocess
+
+    env = os.environ.copy()
+    env['LD_LIBRARY_PATH'] = env['LD_LIBRARY_PATH']+":"+library_path
+
     if not output:
         print "+++ " + command
-        sys.stdout.flush()
-        os.system(command)
+        proc = subprocess.Popen(command, shell=True, env=env)
+        proc.wait()
     else:
-        os.system(command + " > " + output)
-
+        print "+++ " + command
+        with open(output, "wb", 0) as out:
+            proc = subprocess.Popen(command, shell=True, stdout=out, env=env)
+            proc.wait()
 
 def matrix_from_euler(rot, tilt, psi):
     """create a rotation matrix from three Euler anges in ZYZ convention"""
@@ -142,22 +147,26 @@ def matrix_transpose(m1):
     return m2
 
 
-def matrix_from_symmetry(symString):
+def matrix_from_symmetry(symString, library_path):
     """ Create the symmetry matrices from a given string using Relion convention.
     We use use 'relion_refine --sym' to generate the symmetry file and
     then parse it to load the matrices. """
     tmpSymFile = "relion_symops.tmp"
-    relion_create_symmetry_ops_file(symString, tmpSymFile)
+    relion_create_symmetry_ops_file(symString, tmpSymFile, library_path)
     matrices = matrix_from_symmetry_ops_file(tmpSymFile)
-    os.remove(tmpSymFile)
+    try:
+        os.remove(tmpSymFile)
+    except OSError:
+        pass
 
     return matrices
 
 
-def relion_create_symmetry_ops_file(symString, filename):
+def relion_create_symmetry_ops_file(symString, filename, library_path):
     """ Create a symmetry operator file
     by running relion_refine --print_symmetry_ops."""
-    runProgram('relion_refine', '--sym %s --print_symmetry_ops --o ./ > %s' % (symString, filename))
+    run_command('relion_refine --sym %s --print_symmetry_ops --o ./ > %s' % (symString, filename),"", library_path)
+
 
 def matrix_from_symmetry_ops_file(filename):
     """ Obtain the lists with 9 values for the set_matrix method

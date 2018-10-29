@@ -207,7 +207,7 @@ def create_subparticles(particle, symmetry_matrices, subparticle_vector_list,
             if not overlaps:
                 subpart.rlnImageName = "%06d@%s/%s_subparticles.mrcs" % (subpart_id, output, part_filename)
                 subpart.rlnParticleName = str(subparticles_total)
-                subpart.rlnMicrographName = part_filename + ".mrc"
+                subpart.rlnMicrographName = "%s/%s.mrc" % (output, part_filename)
                 subparticles.append(subpart)
                 subpart_id += 1
                 subparticles_total += 1
@@ -216,11 +216,11 @@ def create_subparticles(particle, symmetry_matrices, subparticle_vector_list,
         subtracted = clone_subtracted_subparticles(subparticles, output)
 
     # To preserve numbering, ALL sub-particles are written to STAR files before filtering
-    if do_create_star:
-        starfile = "%s/%s.star" % (output, part_filename)
-        create_star(subparticles, starfile)
-        if subtract_masked_map:
-            create_star(subtracted, add_suffix(starfile))
+#    if do_create_star:
+#        starfile = "%s/%s.star" % (output, part_filename)
+#        create_star(subparticles, starfile)
+#        if subtract_masked_map:
+#            create_star(subtracted, add_suffix(starfile))
 
     if filters:
         subparticles = filter_subparticles(subparticles, filters)
@@ -274,9 +274,9 @@ def clone_subtracted_subparticles(subparticles, output):
     return subparticles_subtracted
 
 
-def add_suffix(filename, output='particles'):
-    return filename.replace('%s_' % output,
-                            '%s_subtracted_' % output)
+def add_suffix(filename, output='.'):
+    return filename.replace('%s' % output,
+                            '_subtracted%s' % output)
 
 
 def create_star(subparticles, star_filename):
@@ -387,7 +387,7 @@ def scipion_split_particle_stacks(inputStar, inputStack, output, filename_prefix
         pwutils.cleanPath(inputStack)
 
 
-def create_initial_stacks(input_star, angpix, masked_map, output):
+def create_initial_stacks(input_star, angpix, masked_map, output, library_path):
     """ Create initial particle stacks (and STAR files) to be used
     for extraction of subparticles. If the masked_map is passed,
     another stack with subtracted particles will be created. """
@@ -409,15 +409,15 @@ def create_initial_stacks(input_star, angpix, masked_map, output):
             print ("\nWarning: no CTF info found in %s!\n"
                    "The subtraction will be performed without CTF correction.\n" % input_star)
         run_command("relion_project" + args %
-                    (masked_map, subtractedStackRoot, input_star, angpix))
-        run_command("mv %s.star %s_orig.star" % (subtractedStackRoot, subtractedStackRoot))
+                    (masked_map, subtractedStackRoot, input_star, angpix),"",library_path)
+        run_command("mv %s.star %s_orig.star" % (subtractedStackRoot, subtractedStackRoot),"",library_path)
 
         subtractedStack = subtractedStackRoot + '.mrcs'
 
         scipion_split_particle_stacks(input_star, subtractedStack, output, 'particles_subtracted', deleteStack=True)
 
 
-def extract_subparticles(subpart_size, np, masked_map, output, deleteParticles):
+def extract_subparticles(subpart_size, np, masked_map, output, library_path, deleteParticles):
     """ Extract subparticles images from each particle
     (Using 'relion_preprocess' as if the particle was a micrograph.
     Notice that this command line works only in Relion 1.4, not 2.0"""
@@ -428,11 +428,17 @@ def extract_subparticles(subpart_size, np, masked_map, output, deleteParticles):
         cmd = 'mpirun -np %s relion_preprocess_mpi ' % np
 
     def run_extract(suffix=''):
-        args = ('--extract --o subparticles --extract_size %s --coord_files '
-                '"%s/particles%s_??????.star"') % (subpart_size, output, suffix)
-        run_command(cmd + args, "/dev/null")
+        args = ('--i "%s%s.star" --extract --extract_size %s --reextract_data_star '
+                '"%s%s.star"') % (output, suffix, subpart_size, output, suffix)
+        run_command(cmd + args, "extract_step.log", library_path)
+
         print(" Cleaning up temporary files...")
-        run_command("rm subparticles.star")
+#       run_command("rm subparticles.star")
+        try:
+            os.remove('%s.star' % output)
+        except OSError:
+            pass
+
         if deleteParticles:
             pwutils.cleanPattern('%s/particles%s_??????.mrc' % (output, suffix))
 
@@ -500,13 +506,13 @@ def split_star_to_random_subsets(inputStarRoot):
     return half1StarRoot, half2StarRoot
 
 
-def reconstruct_subparticles(threads, output, maxres, sym, angpix):
+def reconstruct_subparticles(threads, output, maxres, sym, angpix, library_path):
     """ Reconstruct subparticles. Also create two half maps using random subsets. """
 
     def run_reconstruct(input, suffix='', extraArgs=''):
         cmd = ('relion_reconstruct ')
-        args = ('--sym %s --j %s %s --o %s%s.mrc --i %s.star --angpix %s') % (sym, threads, extraArgs, output, suffix, input, angpix)
-        run_command(cmd + args)
+        args = ('--sym %s %s --o %s%s.mrc --i %s.star --angpix %s') % (sym, extraArgs, output, suffix, input, angpix)
+        run_command(cmd + args,"", library_path)
 
     for input in [output, output+'_subtracted']:
         args = ""
@@ -532,13 +538,21 @@ def reconstruct_subparticles(threads, output, maxres, sym, angpix):
             run_reconstruct(input, '_class001', args)
 
 
-def run_command(command, output=""):
+def run_command(command, output, library_path):
+    import subprocess
+
+    env = os.environ.copy()
+    env['LD_LIBRARY_PATH'] = env['LD_LIBRARY_PATH']+":"+library_path
+
     if not output:
         print "+++ " + command
-        sys.stdout.flush()
-        os.system(command)
+        proc = subprocess.Popen(command, shell=True, env=env)
+        proc.wait()
     else:
-        os.system(command + " > " + output)
+        print "+++ " + command
+        with open(output, "wb", 0) as out:
+            proc = subprocess.Popen(command, shell=True, stdout=out, env=env)
+            proc.wait()
 
 
 class ProgressBar():

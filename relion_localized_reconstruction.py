@@ -58,6 +58,7 @@ class LocalizedReconstruction():
         createSubparticles = self.parser.add_argument_group('Create subparticles')
         extractSubparticles = self.parser.add_argument_group('Extract subparticles')
         reconstructSubparticles = self.parser.add_argument_group('Reconstruct subparticles')
+        expertOptions = self.parser.add_argument_group('Expert options')
 
         # Shortcuts
         add = general.add_argument
@@ -66,6 +67,7 @@ class LocalizedReconstruction():
         addcs = createSubparticles.add_argument
         addes = extractSubparticles.add_argument
         addrs = reconstructSubparticles.add_argument
+        addeo = expertOptions.add_argument
 
         # General parameters
         add('input_star', nargs='?', help="Input STAR filename with particles.")
@@ -125,10 +127,16 @@ class LocalizedReconstruction():
             help="Size of the subparticle box (pixels).")
         addes('--np', type=int, default=1, help="Number of MPI procs. (default: 1)")
 
+
         # Parameters for "Reconstruct subparticles" group
         addrs('--j', type=int, default=1, help="Number of threads.")
         addrs('--maxres', type=float, help="Maximum resolution of the reconstruction (A). (default: Nyquist)")
         addrs('--subsym', default="C1", help="Symmetry of the subparticle. (default: C1)")
+
+        # Expert parameters
+        addeo('--library_path', type=str, default='',
+              help="define LD_LIBRARY_PATH used. Default: empty")
+
 
     def usage(self):
         self.parser.print_help()
@@ -175,11 +183,15 @@ class LocalizedReconstruction():
         # Validate input arguments and required software
         self.validate(args)
 
-        run_command("mkdir -p " + args.output, "/dev/null")
+        try: 
+            os.makedirs(args.output)
+        except OSError:
+            if not os.path.isdir(args.output):
+                raise
 
         if args.prepare_particles:
             print "Preparing particles for extracting subparticles."
-            create_initial_stacks(args.input_star, args.angpix, args.masked_map, args.output)
+            create_initial_stacks(args.input_star, args.angpix, args.masked_map, args.output, args.library_path)
             print "\nFinished preparing the particles!\n"
 
         if args.create_subparticles:
@@ -203,7 +215,7 @@ class LocalizedReconstruction():
             progressbar = ProgressBar(width=60, total=len(md))
 
             # Generate symmetry matrices with Relion convention
-            symmetry_matrices = matrix_from_symmetry(args.sym)
+            symmetry_matrices = matrix_from_symmetry(args.sym, args.library_path)
 
             # Define some conditions to filter subparticles
             filters = load_filters(radians(args.side), radians(args.top), args.mindist)
@@ -238,12 +250,12 @@ class LocalizedReconstruction():
 
         if args.extract_subparticles:
             print "Extracting subparticles..."
-            extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, deleteParticles=True)
+            extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, deleteParticles=True)
             print "\nFinished extracting the subparticles!\n"
 
         if args.reconstruct_subparticles:
             print "Reconstructing subparticles..."
-            reconstruct_subparticles(args.j, args.output, args.maxres, args.subsym, args.angpix)
+            reconstruct_subparticles(args.j, args.output, args.maxres, args.subsym, args.angpix, args.library_path)
             print "\nFinished reconstructing the subparticles!\n"
 
         print "\nAll done!\n"
