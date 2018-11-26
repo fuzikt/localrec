@@ -89,6 +89,8 @@ class LocalizedReconstruction():
         # Parameters for "Prepare particles" group
         addpp('--masked_map',
               help="Create another set of particles with partial signal subtraction using this map.")
+        addpp('--extract_from_micrographs', action='store_true',
+              help="Extract subparticles directly form micrographs instead particle images. Cannot be used with signal subtraction enabled.")
 
         # Parameters for "Create subparticles" group
         addcs('--angpix', type=float, default=1, help="Pixel size (A). (default: 1)")
@@ -126,7 +128,10 @@ class LocalizedReconstruction():
         addes('--subparticle_size', type=int,
             help="Size of the subparticle box (pixels).")
         addes('--np', type=int, default=1, help="Number of MPI procs. (default: 1)")
-
+        addes('--only_extract_unfinished', action='store_true',
+              help="Extract only particles not extracted in previous run.")
+        addes('--invert_contrast', action='store_true',
+              help="Use this option when extractiong from micrographs tha were not inveted (i.e. black particles on white background).")
 
         # Parameters for "Reconstruct subparticles" group
         addrs('--j', type=int, default=1, help="Number of threads.")
@@ -166,6 +171,10 @@ class LocalizedReconstruction():
             if not os.path.exists(args.input_star):
                 self.error("\nInput file '%s' not found." % args.input_star)
 
+        if args.masked_map:
+            if args.extract_from_micrographs:
+               self.error("You cannot use signal subtraction and extracting from micrographs option together. Please, choose one of them.")
+
         if args.extract_subparticles:
             if not args.particle_size:
                 self.error("Parameter --particle_size is required.")
@@ -191,7 +200,7 @@ class LocalizedReconstruction():
 
         if args.prepare_particles:
             print "Preparing particles for extracting subparticles."
-            create_initial_stacks(args.input_star, args.angpix, args.masked_map, args.output, args.library_path)
+            create_initial_stacks(args.input_star, args.angpix, args.masked_map, args.output, args.extract_from_micrographs, args.library_path)
             print "\nFinished preparing the particles!\n"
 
         if args.create_subparticles:
@@ -211,11 +220,11 @@ class LocalizedReconstruction():
             md = MetaData(particles_star)
             print "Creating subparticles..."
 
-            # Initialize progress bar
-            progressbar = ProgressBar(width=60, total=len(md))
-
             # Generate symmetry matrices with Relion convention
             symmetry_matrices = matrix_from_symmetry(args.sym, args.library_path)
+
+            # Initialize progress bar
+            progressbar = ProgressBar(width=60, total=len(md))
 
             # Define some conditions to filter subparticles
             filters = load_filters(radians(args.side), radians(args.top), args.mindist)
@@ -235,6 +244,7 @@ class LocalizedReconstruction():
                                                        len(mdOut),
                                                        args.align_subparticles,
                                                        args.masked_map,
+                                                       args.extract_from_micrographs,
                                                        True,
                                                        filters)
 
@@ -244,13 +254,23 @@ class LocalizedReconstruction():
                 progressbar.notify()
 
             md.removeLabels('rlnOriginZ', 'rlnOriginalName')
+
             write_output_starfiles(md.getLabels(), mdOut, mdOutSub, args.output)
+
+            if args.extract_from_micrographs:
+                md.setData(unique_micrographs(md))
+            md.write("%s/%s.star" % (args.output, 'micrographs'))
 
             print "\nFinished creating the subparticles!\n"
 
         if args.extract_subparticles:
             print "Extracting subparticles..."
-            extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, deleteParticles=True)
+            if args.extract_from_micrographs:
+                if not args.create_subparticles:
+                    md = MetaData(args.output + "/particles.star")                    
+                extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.extract_from_micrographs, args.invert_contrast, False, md._data[0].rlnMicrographName.split('/').pop(0))
+            else:
+                extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.extract_from_micrographs, args.invert_contrast, True, args.output)
             print "\nFinished extracting the subparticles!\n"
 
         if args.reconstruct_subparticles:

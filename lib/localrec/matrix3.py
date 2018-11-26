@@ -77,10 +77,12 @@ def run_command(command, output, library_path):
 
     if not output:
         print "+++ " + command
+        sys.stdout.flush()
         proc = subprocess.Popen(command, shell=True, env=env)
         proc.wait()
     else:
         print "+++ " + command
+        sys.stdout.flush()
         with open(output, "wb", 0) as out:
             proc = subprocess.Popen(command, shell=True, stdout=out, env=env)
             proc.wait()
