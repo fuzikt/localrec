@@ -2,11 +2,28 @@
 
 Localized reconstruction of flexible subunits from macromolecular complexes.
 
-Version: 1.2.0
+Version: 1.2.0a
 
-It also requires the following software:
+### New features added
+
+RELION 3 compatible particle extraction.
+
+--extract_from_micrographs
+Extract subparticles directly form micrographs instead particle images. Cannot be used with signal subtraction.
+
+--only_extract_unfinished
+Extract only particles not extracted in previous run.
+
+--invert_contrast
+Use this option when extracting from micrographs that were not inveted (i.e. black particles ons on white background).
+
+--library_path
+define LD_LIBRARY_PATH used by Relion. Default: empty
+
+
+### It also requires the following software:
 * Scipion 1.1 (currently release-1.1 branch)
-* Relion 1.4
+* Relion 3
 
 ## Reference
 
@@ -22,4 +39,4 @@ See: https://github.com/OPIC-Oxford/localrec/wiki
 
 ## Acknowledgements
 
-The authors acknowledge funding from the European Research Council under the European Union’s Horizon 2020 research and innovation programme (649053) and from the Wellcome Trust PhD Programme in Structural Biology. 
+The authors acknowledge funding from the European Research Council under the European Union’s Horizon 2020 research and innovation programme (649053) and from the Wellcome Trust PhD Programme in Structural Biology.
