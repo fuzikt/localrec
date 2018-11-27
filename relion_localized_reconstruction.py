@@ -90,7 +90,7 @@ class LocalizedReconstruction():
         addpp('--masked_map',
               help="Create another set of particles with partial signal subtraction using this map.")
         addpp('--extract_from_micrographs', action='store_true',
-              help="Extract subparticles directly form micrographs instead particle images. Cannot be used with signal subtraction enabled.")
+              help="Extract subparticles directly form micrographs instead from particle images. Cannot be used with signal subtraction enabled.")
 
         # Parameters for "Create subparticles" group
         addcs('--angpix', type=float, default=1, help="Pixel size (A). (default: 1)")
@@ -131,7 +131,7 @@ class LocalizedReconstruction():
         addes('--only_extract_unfinished', action='store_true',
               help="Extract only particles not extracted in previous run.")
         addes('--invert_contrast', action='store_true',
-              help="Use this option when extractiong from micrographs tha were not inveted (i.e. black particles on white background).")
+              help="Use this option when extracting from micrographs that were not inverted (i.e. black particles on white background).")
 
         # Parameters for "Reconstruct subparticles" group
         addrs('--j', type=int, default=1, help="Number of threads.")
