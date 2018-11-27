@@ -8,16 +8,16 @@ Version: 1.2.0a
 
 RELION 3 compatible particle extraction.
 
---extract_from_micrographs
+--extract_from_micrographs  
 Extract subparticles directly form micrographs instead from particle images. Cannot be used with signal subtraction.
 
---only_extract_unfinished
+--only_extract_unfinished  
 Extract only particles not extracted in previous run.
 
---invert_contrast
+--invert_contrast  
 Use this option when extracting from micrographs that were not inverted (i.e. black particles ons on white background).
 
---library_path
+--library_path  
 define LD_LIBRARY_PATH used by Relion. Default: empty
 
 
