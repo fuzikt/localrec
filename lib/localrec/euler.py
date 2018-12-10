@@ -28,28 +28,29 @@ import vector3
 
 
 def euler_from_matrix(matrix):
-    """converts a matrix to Eulers"""
+    """converts a matrix to Eulers - as in Relion euler.cpp"""
+    FLT_EPSILON=1.19209e-07
+    sign = lambda x: x and (1, -1)[x<0]
 
-    # this needs to be true for acos: -1.0 <= a < 1.0
-    a = matrix.m[2][2]
-    if a < -1:
-        a = -1.000
-    if a > 1:
-        a = 1.000
-
-    # tilt is always positive here, which means the final value will always be negative.
-    # this results the other of the two equivalent options being written in the output file
-    tilt = acos(a)
-
-    if abs(tilt) < 0.00001:
-        rot = radians(0.00)
-        psi = atan2(-matrix.m[1][0], matrix.m[0][0])
-    else:
-        rot = atan2(matrix.m[2][1], matrix.m[2][0])
+    abs_sb = sqrt(matrix.m[0][2] * matrix.m[0][2] + matrix.m[1][2] * matrix.m[1][2])
+    if (abs_sb > 16*FLT_EPSILON):
         psi = atan2(matrix.m[1][2], -matrix.m[0][2])
-
+        rot = atan2(matrix.m[2][1], matrix.m[2][0])
+        if (abs(sin(psi)) < FLT_EPSILON):
+            sign_sb = sign(-matrix.m[0][2] / cos(psi))
+        else:
+            sign_sb = sign(matrix.m[1][2]) if (sin(psi) > 0) else -sign(matrix.m[1][2])
+        tilt  = atan2(sign_sb * abs_sb, matrix.m[2][2])
+    else:
+        if (sign(matrix.m[2][2]) > 0):
+            rot = 0
+            tilt  = 0
+            psi = atan2(-matrix.m[1][0], matrix.m[0][0])
+        else:
+            rot = 0
+            tilt  = pi
+            psi = atan2(matrix.m[1][0], -matrix.m[0][0])
     return rot, tilt, psi
-
 
 def euler_from_vector(vector):   
     """converts a view vector to Eulers that describe a rotation taking the reference vector [0,0,1] on the vector""" 
