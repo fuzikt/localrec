@@ -90,7 +90,7 @@ class LocalizedReconstruction():
         addpp('--masked_map',
               help="Create another set of particles with partial signal subtraction using this map.")
         addpp('--extract_from_micrographs', action='store_true',
-              help="Extract subparticles directly form micrographs instead from particle images. Cannot be used with signal subtraction enabled.")
+              help="Extract subparticles directly from micrographs instead from particle images. Cannot be used with signal subtraction enabled.")
 
         # Parameters for "Create subparticles" group
         addcs('--angpix', type=float, default=1, help="Pixel size (A). (default: 1)")
