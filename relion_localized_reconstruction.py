@@ -132,6 +132,8 @@ class LocalizedReconstruction():
               help="Extract only particles not extracted in previous run.")
         addes('--invert_contrast', action='store_true',
               help="Use this option when extracting from micrographs that were not inverted (i.e. black particles on white background).")
+        addes('--normalize', action='store_true',
+              help="Normalize the extracted particles. Useful when extracting from micrographs.")
 
         # Parameters for "Reconstruct subparticles" group
         addrs('--j', type=int, default=1, help="Number of threads.")
@@ -268,9 +270,9 @@ class LocalizedReconstruction():
             if args.extract_from_micrographs:
                 if not args.create_subparticles:
                     md = MetaData(args.output + "/particles.star")                    
-                extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.extract_from_micrographs, args.invert_contrast, False, md._data[0].rlnMicrographName.split('/').pop(0))
+                extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.extract_from_micrographs, args.invert_contrast, args.normalize, False, md._data[0].rlnMicrographName.split('/').pop(0))
             else:
-                extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.extract_from_micrographs, args.invert_contrast, True, args.output)
+                extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.extract_from_micrographs, args.invert_contrast, args.normalize, True, args.output)
             print "\nFinished extracting the subparticles!\n"
 
         if args.reconstruct_subparticles:

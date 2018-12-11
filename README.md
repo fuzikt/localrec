@@ -17,6 +17,9 @@ Extract only particles not extracted in previous run.
 --invert_contrast  
 Use this option when extracting from micrographs that were not inverted (i.e. black particles ons on white background).
 
+--normalize
+Normalize the extracted particles. Useful when extracting from micrographs.
+
 --library_path  
 define LD_LIBRARY_PATH used by Relion. Default: empty
 
