@@ -436,6 +436,8 @@ def extract_subparticles(subpart_size, np, masked_map, output, library_path, onl
     (Using 'relion_preprocess' as if the particle was a micrograph.
     Notice that this command line works only in Relion 1.4, not 2.0"""
 
+    additional_parameters = ''
+
     if np == 1:
         cmd = 'relion_preprocess '
     else:
