@@ -275,9 +275,9 @@ class LocalizedReconstruction():
             if args.extract_from_micrographs:
                 if not args.create_subparticles:
                     md = MetaData(args.output + "/particles.star")                    
-                extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.extract_from_micrographs, args.invert_contrast, args.normalize, False, md._data[0].rlnMicrographName.split('/').pop(0))
+                extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.invert_contrast, args.normalize, False, md._data[0].rlnMicrographName.split('/').pop(0))
             else:
-                extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.extract_from_micrographs, args.invert_contrast, args.normalize, True, args.output)
+                extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.invert_contrast, args.normalize, True, args.output)
             print "\nFinished extracting the subparticles!\n"
 
         if args.reconstruct_subparticles:

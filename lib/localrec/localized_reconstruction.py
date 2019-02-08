@@ -431,7 +431,7 @@ def create_initial_stacks(input_star, angpix, masked_map, output, extract_from_m
         scipion_split_particle_stacks(extract_from_micrographs, input_star, subtractedStack, output, 'particles_subtracted', deleteStack=True)
 
 
-def extract_subparticles(subpart_size, np, masked_map, output, library_path, only_extract_unfinished, extract_from_micrographs, invert_contrast, normalize, deleteParticles, outDir):
+def extract_subparticles(subpart_size, np, masked_map, output, library_path, only_extract_unfinished, invert_contrast, normalize, deleteParticles, outDir):
     """ Extract subparticles images from each particle
     (Using 'relion_preprocess' as if the particle was a micrograph.
     Notice that this command line works only in Relion 1.4, not 2.0"""
@@ -459,13 +459,12 @@ def extract_subparticles(subpart_size, np, masked_map, output, library_path, onl
 
         print(" Cleaning up temporary files...")
 
-        if extract_from_micrographs:
-            f = open('subparticles_tmp.star','r')
-            filedata = f.read()
-            f.close()
-            f = open('%s.star' % output,'w')
-            f.write(filedata.replace('Particles/%s' % outDir, output))
-            f.close()
+        f = open('subparticles_tmp.star','r')
+        filedata = f.read()
+        f.close()
+        f = open('%s%s.star' % (output,suffix),'w')
+        f.write(filedata.replace('Particles/%s' % outDir, output))
+        f.close()
 
         try:
             os.remove('%s.star' % 'subparticles_tmp')
