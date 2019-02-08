@@ -204,8 +204,8 @@ def create_subparticles(particle, symmetry_matrices, subparticle_vector_list,
                 subpart.rlnCoordinateX = particle.rlnCoordinateX - x_i
                 subpart.rlnCoordinateY = particle.rlnCoordinateY - y_i
 
-            subpart.rlnOriginX = -x_d
-            subpart.rlnOriginY = -y_d
+            subpart.rlnOriginX = x_d
+            subpart.rlnOriginY = y_d
 
             overlaps = (unique >= 0 and
                         not filter_unique(subparticles, subpart, unique))
@@ -282,9 +282,9 @@ def clone_subtracted_subparticles(subparticles, output):
     return subparticles_subtracted
 
 
-def add_suffix(filename, output='.'):
-    return filename.replace('%s' % output,
-                            '_subtracted%s' % output)
+def add_suffix(filename, output='particles'):
+    return filename.replace('%s_' % output,
+                           '%s_subtracted_' % output)
 
 
 def create_star(subparticles, star_filename):
@@ -544,7 +544,7 @@ def reconstruct_subparticles(threads, output, maxres, sym, angpix, library_path)
 
     def run_reconstruct(input, suffix='', extraArgs=''):
         cmd = ('relion_reconstruct ')
-        args = ('--sym %s %s --o %s%s.mrc --i %s.star --angpix %s') % (sym, extraArgs, output, suffix, input, angpix)
+        args = ('--sym %s %s --o %s%s.mrc --i %s.star --angpix %s') % (sym, extraArgs, input, suffix, input, angpix)
         run_command(cmd + args,"", library_path)
 
     for input in [output, output+'_subtracted']:
@@ -562,8 +562,8 @@ def reconstruct_subparticles(threads, output, maxres, sym, angpix, library_path)
             # reconstruct random halves to Nyquist frequency
             if "rlnRandomSubset" in md.getLabels():
                 half1Star, half2Star = split_star_to_random_subsets(input)
-                run_reconstruct(half1Star, "_half1_class001_unfil", args)
-                run_reconstruct(half2Star, "_half2_class001_unfil", args)
+                run_reconstruct(half1Star, "_class001_unfil", args)
+                run_reconstruct(half2Star, "_class001_unfil", args)
 
             # reconstruct the map to maximum resolution given
             if maxres:

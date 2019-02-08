@@ -261,7 +261,12 @@ class LocalizedReconstruction():
 
             if args.extract_from_micrographs:
                 md.setData(unique_micrographs(md))
+
             md.write("%s/%s.star" % (args.output, 'micrographs'))
+
+            if len(mdOutSub):
+                mdOutSub.setData(unique_micrographs(mdOutSub))
+                mdOutSub.write("%s/%s.star" % (args.output, 'micrographs_subtracted'))
 
             print "\nFinished creating the subparticles!\n"
 
