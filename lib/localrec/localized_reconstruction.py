@@ -542,7 +542,11 @@ def reconstruct_subparticles(threads, output, maxres, sym, angpix, library_path)
     """ Reconstruct subparticles. Also create two half maps using random subsets. """
 
     def run_reconstruct(input, suffix='', extraArgs=''):
-        cmd = ('relion_reconstruct ')
+        if threads>1 :
+            cmd = ('mpirun -np %s relion_reconstruct_mpi ') % (threads)
+        else:
+            cmd = ('relion_reconstruct ')
+
         args = ('--sym %s %s --o %s%s.mrc --i %s.star --angpix %s') % (sym, extraArgs, input, suffix, input, angpix)
         run_command(cmd + args,"", library_path)
 
