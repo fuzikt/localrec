@@ -248,7 +248,8 @@ class LocalizedReconstruction():
                                                        args.masked_map,
                                                        args.extract_from_micrographs,
                                                        True,
-                                                       filters)
+                                                       filters,
+                                                       args.angpix)
 
                 mdOut.addData(subparticles)
                 mdOutSub.addData(subtracted)
