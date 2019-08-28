@@ -24,6 +24,9 @@ Normalize the extracted particles. Useful when extracting from micrographs.
 --library_path  
 define LD_LIBRARY_PATH used by Relion. Default: empty
 
+--particle_size
+!!! not used anymore. Autodetected from particle/micrograph image. Support for non-square micrographs (e.g. K2, K3)
+
 
 ### It also requires the following software:
 * Relion 3

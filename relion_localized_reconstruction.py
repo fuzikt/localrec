@@ -95,8 +95,6 @@ class LocalizedReconstruction():
         # Parameters for "Create subparticles" group
         addcs('--angpix', type=float, default=1, help="Pixel size (A). (default: 1)")
         addcs('--sym', default="C1", help="Symmetry of the particle. (default: C1)")
-        addcs('--particle_size', type=int,
-              help="Size of the particle box (pixels).")
         addcs('--randomize', action='store_true',
               help="Randomize the order of the symmetry matrices. "
                    "Useful for preventing preferred orientations.")
@@ -175,8 +173,6 @@ class LocalizedReconstruction():
                self.error("You cannot use signal subtraction and extracting from micrographs option together. Please, choose one of them.")
 
         if args.extract_subparticles:
-            if not args.particle_size:
-                self.error("Parameter --particle_size is required.")
             if not args.subparticle_size:
                 self.error("Parameter --subparticle_size is required.")
 
@@ -217,6 +213,21 @@ class LocalizedReconstruction():
                            % particles_star)
 
             md = MetaData(particles_star)
+
+            # Get particle / micrograph size
+            if args.extract_from_micrographs:
+                mrcFilename = md._data[0].rlnMicrographName
+                print("Micrograph image size:")
+            else:
+                mrcFilename = md._data[0].rlnImageName
+                print("Particle image size:")
+
+            mrcFile = open(mrcFilename, "rb")
+            particleImageSizeX = int(struct.unpack('i', mrcFile.read(4))[0])
+            particleImageSizeY = int(struct.unpack('i', mrcFile.read(4))[0])
+            mrcFile.close()
+            print("%s, %s pixels\n" % (particleImageSizeX, particleImageSizeY))
+
             print("Creating subparticles...")
 
             # Generate symmetry matrices with Relion convention
@@ -232,11 +243,13 @@ class LocalizedReconstruction():
             mdOut = MetaData()
             mdOutSub = MetaData()
 
+
             for particle in md:
                 subparticles, subtracted = create_subparticles(particle,
                                                        symmetry_matrices,
                                                        subparticle_vector_list,
-                                                       args.particle_size,
+                                                       particleImageSizeX,
+                                                       particleImageSizeY,
                                                        args.randomize,
                                                        args.output,
                                                        args.unique,

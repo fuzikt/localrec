@@ -145,15 +145,13 @@ def angles_to_degrees(particle):
 
 
 def create_subparticles(particle, symmetry_matrices, subparticle_vector_list,
-                        part_image_size, randomize, output,
+                        part_image_sizeX, part_image_sizeY, randomize, output,
                         unique, subparticles_total, align_subparticles,
                         subtract_masked_map, extract_from_micrographs, do_create_star, filters, ang_pix):
     """ Obtain all subparticles from a given particle and set
     the properties of each such subparticle. """
 
     part_filename = splitext(basename(particle.rlnImageName))[0]
-
-
 
     # We convert the particle angles to radian for further computations
     angles_to_radians(particle)
@@ -219,8 +217,8 @@ def create_subparticles(particle, symmetry_matrices, subparticle_vector_list,
             y_d, y_i = math.modf(y)
 
             if not extract_from_micrographs:
-                subpart.rlnCoordinateX = int(part_image_size / 2) - x_i
-                subpart.rlnCoordinateY = int(part_image_size / 2) - y_i
+                subpart.rlnCoordinateX = int(part_image_sizeX / 2) - x_i
+                subpart.rlnCoordinateY = int(part_image_sizeY / 2) - y_i
             else:
                 subpart.rlnCoordinateX = particle.rlnCoordinateX - x_i
                 subpart.rlnCoordinateY = particle.rlnCoordinateY - y_i
@@ -242,7 +240,7 @@ def create_subparticles(particle, symmetry_matrices, subparticle_vector_list,
                     subparticles_total += 1
                 else:
                     subpart.rlnMicrographName = particle.rlnMicrographName
-                    if not ((subpart.rlnCoordinateX<0) or (subpart.rlnCoordinateY<0) or (subpart.rlnCoordinateX>part_image_size) or (subpart.rlnCoordinateY>part_image_size)):
+                    if not ((subpart.rlnCoordinateX<0) or (subpart.rlnCoordinateY<0) or (subpart.rlnCoordinateX>part_image_sizeX) or (subpart.rlnCoordinateY>part_image_sizeY)):
                         subparticles.append(subpart)
                         subpart_id += 1
                         subparticles_total += 1
@@ -350,10 +348,10 @@ def load_vectors(cmm_file, vectors_str, distances_str, angpix):
     print("Using vectors:")
 
     for subparticle_vector in subparticle_vector_list:
-        print("Vector: ",
-        subparticle_vector.normalize(),
-        subparticle_vector.compute_matrix(),
-        subparticle_vector.print_vector())
+        print("Vector: ")
+        subparticle_vector.normalize()
+        subparticle_vector.compute_matrix()
+        subparticle_vector.print_vector()
         print("")
         print("Length: %.2f pixels" % subparticle_vector.distance())
     print("")
