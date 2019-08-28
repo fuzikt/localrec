@@ -2,11 +2,12 @@
 
 Localized reconstruction of flexible subunits from macromolecular complexes.
 
-Version: 1.2.0a
+Version: 1.3.0
 
 ### New features added
 
 RELION 3 compatible particle extraction.
+NO Scipion needed to run!!!
 
 --extract_from_micrographs  
 Extract subparticles directly form micrographs instead from particle images. Cannot be used with signal subtraction.
@@ -25,7 +26,6 @@ define LD_LIBRARY_PATH used by Relion. Default: empty
 
 
 ### It also requires the following software:
-* Scipion 1.1 (currently release-1.1 branch)
 * Relion 3
 
 ## Reference

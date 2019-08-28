@@ -150,17 +150,14 @@ class LocalizedReconstruction():
 
     def error(self, *msgs):
         self.usage()
-        print "\nError: " + '\n'.join(msgs)
-        print " "
+        print("\nError: " + '\n'.join(msgs))
+        print(" ")
         sys.exit(2)
 
     def validate(self, args):
         if len(sys.argv) == 1:
             self.usage()
         # Check that required software is in PATH
-        if not (spawn.find_executable("scipion")):
-            self.error("Scipion not found.",
-                       "Make sure Scipion is in $PATH.")
 
         if not (spawn.find_executable("relion_refine")):
             self.error("Relion not found.",
@@ -201,9 +198,9 @@ class LocalizedReconstruction():
                 raise
 
         if args.prepare_particles:
-            print "Preparing particles for extracting subparticles."
+            print("Preparing particles for extracting subparticles.")
             create_initial_stacks(args.input_star, args.angpix, args.masked_map, args.output, args.extract_from_micrographs, args.library_path)
-            print "\nFinished preparing the particles!\n"
+            print("\nFinished preparing the particles!\n")
 
         if args.create_subparticles:
             # Load subparticle vectors either from Chimera CMM file or from
@@ -220,7 +217,7 @@ class LocalizedReconstruction():
                            % particles_star)
 
             md = MetaData(particles_star)
-            print "Creating subparticles..."
+            print("Creating subparticles...")
 
             # Generate symmetry matrices with Relion convention
             symmetry_matrices = matrix_from_symmetry(args.sym, args.library_path)
@@ -269,24 +266,24 @@ class LocalizedReconstruction():
                 mdOutSub.setData(unique_micrographs(mdOutSub))
                 mdOutSub.write("%s/%s.star" % (args.output, 'micrographs_subtracted'))
 
-            print "\nFinished creating the subparticles!\n"
+            print("\nFinished creating the subparticles!\n")
 
         if args.extract_subparticles:
-            print "Extracting subparticles..."
+            print("Extracting subparticles...")
             if args.extract_from_micrographs:
                 if not args.create_subparticles:
                     md = MetaData(args.output + "/particles.star")                    
                 extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.invert_contrast, args.normalize, False, md._data[0].rlnMicrographName.split('/').pop(0))
             else:
                 extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.invert_contrast, args.normalize, True, args.output)
-            print "\nFinished extracting the subparticles!\n"
+            print("\nFinished extracting the subparticles!\n")
 
         if args.reconstruct_subparticles:
-            print "Reconstructing subparticles..."
+            print("Reconstructing subparticles...")
             reconstruct_subparticles(args.j, args.output, args.maxres, args.subsym, args.angpix, args.library_path)
-            print "\nFinished reconstructing the subparticles!\n"
+            print("\nFinished reconstructing the subparticles!\n")
 
-        print "\nAll done!\n"
+        print("\nAll done!\n")
 
 if __name__ == "__main__":
     LocalizedReconstruction().main()

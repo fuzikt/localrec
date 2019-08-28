@@ -25,20 +25,40 @@
 # **************************************************************************
 
 import math
-import sys
 import random
+import shutil
+import struct
 from itertools import izip
 from glob import glob
-
 from matrix3 import *
 from vector3 import *
 from euler import *
 from os.path import splitext
 from os.path import basename
-
+from os.path import exists
+from os.path import isdir
+from os.path import islink
 from pyrelion import MetaData
-import pyworkflow.utils as pwutils
-from pyworkflow.utils.path import moveTree
+
+
+def cleanPath(*paths):
+    """ Remove a list of paths, either folders or files"""
+    for p in paths:
+        if exists(p):
+            if isdir(p):
+                if islink(p):
+                    os.remove(p)
+                else:
+                    shutil.rmtree(p)
+            else:
+                os.remove(p)
+
+
+def cleanPattern(pattern):
+    """ Remove all files that match the pattern. """
+    files = glob(pattern)
+    cleanPath(*files)
+
 
 def within_mindist(p1, p2, mindist):
     """ Returns True if two particles are closer to each other
@@ -327,16 +347,16 @@ def load_vectors(cmm_file, vectors_str, distances_str, angpix):
         for vector in subparticle_vector_list:
             vector.compute_distance()
 
-    print "Using vectors:"
+    print("Using vectors:")
 
     for subparticle_vector in subparticle_vector_list:
-        print "Vector: ",
-        subparticle_vector.normalize()
-        subparticle_vector.compute_matrix()
-        subparticle_vector.print_vector()
-        print ""
-        print "Length: %.2f pixels" % subparticle_vector.distance()
-    print ""
+        print("Vector: ",
+        subparticle_vector.normalize(),
+        subparticle_vector.compute_matrix(),
+        subparticle_vector.print_vector())
+        print("")
+        print("Length: %.2f pixels" % subparticle_vector.distance())
+    print("")
 
     return subparticle_vector_list
 
@@ -359,16 +379,44 @@ def load_filters(side, top, mindist):
 
     return filters
 
+def splitMrcStack(stackFile, outFile):
+    # extract filename, image index
+    imageIndex, mrcsFilename = stackFile.split("@")
+    imageIndex = int(imageIndex)
 
-def scipion_split_particle_stacks(extract_from_micrographs, inputStar, inputStack, output, filename_prefix, deleteStack):
+    # read in mrcs file, open mrc file for output
+    mrcsFile = open(mrcsFilename, "rb")
+    mrcFile = open(outFile, 'wb+')
+
+    # get image size
+    imageSize = int(struct.unpack('i', mrcsFile.read(4))[0])
+
+    # write header
+    mrcsFile.seek(0, 0)
+    chunkSize = 1024
+    mrcHeader = mrcsFile.read(chunkSize)
+    mrcFile.write(mrcHeader)
+
+    # change Z dimension to 1
+    mrcFile.seek(8, 0)
+    mrcFile.write(b"\x01")
+    mrcFile.seek(1024, 0)
+
+    # write mrc data file
+    mrcsFile.seek(imageSize ** 2 * 4 * (imageIndex - 1) + 1024, 0)
+    chunkSize = imageSize ** 2 * 4
+    mrcImage = mrcsFile.read(chunkSize)
+    mrcFile.write(mrcImage)
+
+    mrcsFile.close()
+    mrcFile.close()
+
+def split_particle_stacks(extract_from_micrographs, inputStar, inputStack, output, filename_prefix, deleteStack):
     """ Read a STAR file with particles and write as individual images.
     If a stack of images is given, use these instead of the images from the STAR file.
     Also write a new STAR file pointing to these images.
     This function requires that the script is run within Scipion Python environment. """
 
-    import pyworkflow.utils as pwutils
-    from pyworkflow.em import ImageHandler
-    ih = ImageHandler()
     md = MetaData(inputStar)
     md.addLabels('rlnOriginalName')
 
@@ -381,10 +429,10 @@ def scipion_split_particle_stacks(extract_from_micrographs, inputStar, inputStac
         # split stacks only if not extracting directly from micrographs
         if not extract_from_micrographs:
             if inputStack:
-                ih.convert((i, inputStack), outputImageName )
+                splitMrcStack('%06d@%s' %(i, inputStack), outputImageName)
                 particle.rlnOriginalName = '%s/%06d@%s' %(output, i, inputStack)
             else:
-                ih.convert(particle.rlnImageName, outputImageName)
+                splitMrcStack(particle.rlnImageName, outputImageName)
                 particle.rlnOriginalName = particle.rlnImageName
             particle.rlnImageName = outputImageName
             particle.rlnMicrographName = outputImageName
@@ -392,14 +440,14 @@ def scipion_split_particle_stacks(extract_from_micrographs, inputStar, inputStac
             particle.rlnOriginalName = particle.rlnImageName
             particle.rlnImageName = '%s/%s' % (output, particle.rlnMicrographName.split('/').pop())
 
-
         progressbar.notify()
 
     print("\n")
     md.write("%s/%s.star" % (output, filename_prefix))
 
     if inputStack and deleteStack:
-        pwutils.cleanPath(inputStack)
+        cleanPath(inputStack)
+
 
 
 def create_initial_stacks(input_star, angpix, masked_map, output, extract_from_micrographs, library_path):
@@ -407,8 +455,8 @@ def create_initial_stacks(input_star, angpix, masked_map, output, extract_from_m
     for extraction of subparticles. If the masked_map is passed,
     another stack with subtracted particles will be created. """
 
-    print " Creating particle images from which nothing is subtracted..."
-    scipion_split_particle_stacks(extract_from_micrographs, input_star, None, output, 'particles', deleteStack=False)
+    print(" Creating particle images from which nothing is subtracted...")
+    split_particle_stacks(extract_from_micrographs, input_star, None, output, 'particles', deleteStack=False)
 
     if masked_map:
         print(" Creating particle images from which the projections of the masked "
@@ -429,7 +477,7 @@ def create_initial_stacks(input_star, angpix, masked_map, output, extract_from_m
 
         subtractedStack = subtractedStackRoot + '.mrcs'
 
-        scipion_split_particle_stacks(extract_from_micrographs, input_star, subtractedStack, output, 'particles_subtracted', deleteStack=True)
+        split_particle_stacks(extract_from_micrographs, input_star, subtractedStack, output, 'particles_subtracted', deleteStack=True)
 
 
 def extract_subparticles(subpart_size, np, masked_map, output, library_path, only_extract_unfinished, invert_contrast, normalize, deleteParticles, outDir):
@@ -473,7 +521,7 @@ def extract_subparticles(subpart_size, np, masked_map, output, library_path, onl
             pass
 
         if deleteParticles:
-            pwutils.cleanPattern('%s/particles%s_??????.mrc' % (output, suffix))
+            cleanPattern('%s/particles%s_??????.mrc' % (output, suffix))
 
     run_extract()  # Run extraction without subtracted density
 
@@ -481,17 +529,22 @@ def extract_subparticles(subpart_size, np, masked_map, output, library_path, onl
         run_extract('_subtracted')
 
     print(" Moving subparticles to the output directory...")
-    moveTree('Particles/%s' % outDir, output)
+
+    files = os.listdir('Particles/%s' % outDir)
+    for f in files:
+        os.rename('Particles/%s/%s' % (outDir, f), '%s/%s' % (output, f))
+    os.rmdir('Particles/%s' % outDir)
+
 
 
 def write_output_starfiles(labels, mdOut, mdOutSub, output):
 
     labels.extend(['rlnCoordinateX', 'rlnCoordinateY', 'rlnMicrographName'])
 
-    print "\nWriting output STAR files."
+    print("\nWriting output STAR files.")
 
     starfile1 = output + ".star"
-    print " Subparticles (without subtraction):\t\t%s" % starfile1
+    print(" Subparticles (without subtraction):\t\t%s" % starfile1)
     # We convert back angles to degrees and write subparticles star file
     def _writeMd(md, starfile):
         for subpart in md:
@@ -503,7 +556,7 @@ def write_output_starfiles(labels, mdOut, mdOutSub, output):
 
     if len(mdOutSub):
         starfile2 = starfile1.replace('.star', '_subtracted.star')
-        print " Subparticles (with subtraction):\t\t%s" % starfile2
+        print(" Subparticles (with subtraction):\t\t%s" % starfile2)
         _writeMd(mdOutSub, starfile2)
 
 
@@ -582,12 +635,12 @@ def run_command(command, output, library_path):
     env['LD_LIBRARY_PATH'] = env['LD_LIBRARY_PATH']+":"+library_path
 
     if not output:
-        print "+++ " + command
+        print("+++ " + command)
         sys.stdout.flush()
         proc = subprocess.Popen(command, shell=True, env=env)
         proc.wait()
     else:
-        print "+++ " + command
+        print("+++ " + command)
         sys.stdout.flush()
         with open(output, "wb", 0) as out:
             proc = subprocess.Popen(command, shell=True, stdout=out, env=env)
