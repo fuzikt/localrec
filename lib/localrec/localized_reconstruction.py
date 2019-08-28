@@ -590,7 +590,7 @@ def split_star_to_random_subsets(inputStarRoot):
     return half1StarRoot, half2StarRoot
 
 
-def reconstruct_subparticles(threads, output, maxres, sym, angpix, library_path):
+def reconstruct_subparticles(threads, output, maxres, sym, angpix, do_halves, library_path):
     """ Reconstruct subparticles. Also create two half maps using random subsets. """
 
     def run_reconstruct(input, suffix='', extraArgs=''):
@@ -615,7 +615,7 @@ def reconstruct_subparticles(threads, output, maxres, sym, angpix, library_path)
                        "The reconstruction will be performed without CTF correction.\n" % inputStarName)
 
             # reconstruct random halves to Nyquist frequency
-            if "rlnRandomSubset" in md.getLabels():
+            if "rlnRandomSubset" in md.getLabels() and do_halves:
                 half1Star, half2Star = split_star_to_random_subsets(input)
                 run_reconstruct(half1Star, "_class001_unfil", args)
                 run_reconstruct(half2Star, "_class001_unfil", args)

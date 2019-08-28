@@ -134,6 +134,8 @@ class LocalizedReconstruction():
               help="Normalize the extracted particles. Useful when extracting from micrographs.")
 
         # Parameters for "Reconstruct subparticles" group
+        addrs('--do_halves', action='store_true',
+              help="Make reconstruction of the random halves.")
         addrs('--j', type=int, default=1, help="Number of threads.")
         addrs('--maxres', type=float, help="Maximum resolution of the reconstruction (A). (default: Nyquist)")
         addrs('--subsym', default="C1", help="Symmetry of the subparticle. (default: C1)")
@@ -293,7 +295,7 @@ class LocalizedReconstruction():
 
         if args.reconstruct_subparticles:
             print("Reconstructing subparticles...")
-            reconstruct_subparticles(args.j, args.output, args.maxres, args.subsym, args.angpix, args.library_path)
+            reconstruct_subparticles(args.j, args.output, args.maxres, args.subsym, args.angpix, args.do_halves, args.library_path)
             print("\nFinished reconstructing the subparticles!\n")
 
         print("\nAll done!\n")

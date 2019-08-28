@@ -21,6 +21,9 @@ Use this option when extracting from micrographs that were not inverted (i.e. bl
 --normalize  
 Normalize the extracted particles. Useful when extracting from micrographs.
 
+--do-halves
+Make reconstruction of the random halves only if this option is set.
+
 --library_path  
 define LD_LIBRARY_PATH used by Relion. Default: empty
 
