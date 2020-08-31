@@ -5,6 +5,7 @@
 # * Authors:  Serban Ilca (serban@strubi.ox.ac.uk)
 # *           Juha T. Huiskonen (juha@strubi.ox.ac.uk)
 # *           J.M. de la Rosa Trevin
+# *           Tibor Fuzik
 # *
 # * Oxford Particle Imaging Centre,
 # * Division of Structural Biology, University of Oxford
@@ -218,10 +219,16 @@ class LocalizedReconstruction():
 
             # Get particle / micrograph size
             if args.extract_from_micrographs:
-                mrcFilename = md._data[0].rlnMicrographName
+                if md.version == "3.1":
+                    mrcFilename = md.data_particles[0].rlnMicrographName
+                else:
+                    mrcFilename = md.data_[0].rlnMicrographName
                 print("Micrograph image size:")
             else:
-                mrcFilename = md._data[0].rlnImageName
+                if md.version == "3.1":
+                    mrcFilename = md.data_particles[0].rlnImageName
+                else:
+                    mrcFilename = md.data_[0].rlnImageName
                 print("Particle image size:")
 
             mrcFile = open(mrcFilename, "rb")
@@ -245,6 +252,24 @@ class LocalizedReconstruction():
             mdOut = MetaData()
             mdOutSub = MetaData()
 
+            if md.version == "3.1":
+                mdOut.version = "3.1"
+                mdOut.addDataTable("data_optics")
+                mdOut.addLabels("data_optics", md.getLabels("data_optics"))
+                mdOut.addData("data_optics", getattr(md, "data_optics"))
+                mdOut.addDataTable("data_particles")
+
+                mdOutSub.version = "3.1"
+                mdOutSub.addDataTable("data_optics")
+                mdOutSub.addLabels("data_optics", md.getLabels("data_optics"))
+                mdOutSub.addData("data_optics", getattr(md, "data_optics"))
+                mdOutSub.addDataTable("data_particles")
+
+                particleTableName = "data_particles"
+            else:
+                mdOut.addDataTable("data_")
+                mdOutSub.addDataTable("data_")
+                particleTableName = "data_"
 
             for particle in md:
                 subparticles, subtracted = create_subparticles(particle,
@@ -263,23 +288,21 @@ class LocalizedReconstruction():
                                                        filters,
                                                        args.angpix)
 
-                mdOut.addData(subparticles)
-                mdOutSub.addData(subtracted)
+                mdOut.addData(particleTableName, subparticles)
+                mdOutSub.addData(particleTableName, subtracted)
 
                 progressbar.notify()
 
-            md.removeLabels('rlnOriginZ', 'rlnOriginalName')
+            md.removeLabels(particleTableName, 'rlnOriginZ', 'rlnOriginalName')
 
-            write_output_starfiles(md.getLabels(), mdOut, mdOutSub, args.output)
+            write_output_starfiles(md.getLabels(particleTableName), mdOut, mdOutSub, args.output)
 
-            if args.extract_from_micrographs:
-                md.setData(unique_micrographs(md))
 
-            md.write("%s/%s.star" % (args.output, 'micrographs'))
+            #if args.extract_from_micrographs:
+            unique_micrographs(md, args.output, 'micrographs')
 
             if len(mdOutSub):
-                mdOutSub.setData(unique_micrographs(mdOutSub))
-                mdOutSub.write("%s/%s.star" % (args.output, 'micrographs_subtracted'))
+                unique_micrographs(mdOutSub, args.output, 'micrographs_subtracted')
 
             print("\nFinished creating the subparticles!\n")
 
@@ -288,7 +311,7 @@ class LocalizedReconstruction():
             if args.extract_from_micrographs:
                 if not args.create_subparticles:
                     md = MetaData(args.output + "/particles.star")                    
-                extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.invert_contrast, args.normalize, False, md._data[0].rlnMicrographName.split('/').pop(0))
+                extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.invert_contrast, args.normalize, False, getattr(md,particleTableName)[0].rlnMicrographName.split('/').pop(0))
             else:
                 extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.invert_contrast, args.normalize, True, args.output)
             print("\nFinished extracting the subparticles!\n")
@@ -302,4 +325,3 @@ class LocalizedReconstruction():
 
 if __name__ == "__main__":
     LocalizedReconstruction().main()
-

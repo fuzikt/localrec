@@ -201,8 +201,17 @@ def create_subparticles(particle, symmetry_matrices, subparticle_vector_list,
 
             # subparticle origin
             d = subparticle_vector.distance()
-            x = -m.m[0][2] * d + particle.rlnOriginX
-            y = -m.m[1][2] * d + particle.rlnOriginY
+
+            if hasattr(particle, 'rlnOriginXAngst'):
+                #Relion31 star
+                #print(m.m)
+                #print(vector_from_two_eulers(rotNew, tiltNew).print_vector())
+                x = -m.m[0][2] * (d + particle.rlnOriginXAngst / ang_pix)
+                y = -m.m[1][2] * (d + particle.rlnOriginYAngst / ang_pix)
+            else:
+                #Relion3 star
+                x = -m.m[0][2] * d + particle.rlnOriginX
+                y = -m.m[1][2] * d + particle.rlnOriginY
             z = -m.m[2][2] * d
 
             # modify the subparticle defocus paramaters by its z location
@@ -223,8 +232,14 @@ def create_subparticles(particle, symmetry_matrices, subparticle_vector_list,
                 subpart.rlnCoordinateX = particle.rlnCoordinateX - x_i
                 subpart.rlnCoordinateY = particle.rlnCoordinateY - y_i
 
-            subpart.rlnOriginX = x_d
-            subpart.rlnOriginY = y_d
+            if hasattr(particle, 'particle.rlnOriginXAngst'):
+                #Relion31 star
+                subpart.rlnOriginXAngst = x_d * ang_pix
+                subpart.rlnOriginYAngst = y_d * ang_pix
+            else:
+                # Relion3 star
+                subpart.rlnOriginX = x_d
+                subpart.rlnOriginY = y_d
 
             overlaps = (unique >= 0 and
                         not filter_unique(subparticles, subpart, unique))
@@ -416,7 +431,12 @@ def split_particle_stacks(extract_from_micrographs, inputStar, inputStack, outpu
     This function requires that the script is run within Scipion Python environment. """
 
     md = MetaData(inputStar)
-    md.addLabels('rlnOriginalName')
+    if md.version == "3.1":
+        particleTableName = "data_particles"
+    else:
+        particleTableName = "data_"
+
+    md.addLabels(particleTableName, 'rlnOriginalName')
 
     # Initialize progress bar
     progressbar = ProgressBar(width=60, total=len(md))
@@ -463,8 +483,13 @@ def create_initial_stacks(input_star, angpix, masked_map, output, extract_from_m
         subtractedStackRoot = "%s/particles_subtracted" % output
 
         md = MetaData(input_star)
+        if md.version == "3.1":
+            particleTableName = "data_particles"
+        else:
+            particleTableName = "data_"
+
         args = " --i %s --o %s --ang %s --subtract_exp --angpix %s "
-        if "rlnDefocusU" in md.getLabels():
+        if "rlnDefocusU" in md.getLabels(particleTableName):
             args = args + "--ctf "
         else:
             print ("\nWarning: no CTF info found in %s!\n"
@@ -542,20 +567,26 @@ def write_output_starfiles(labels, mdOut, mdOutSub, output):
     print("\nWriting output STAR files.")
 
     starfile1 = output + ".star"
+
+    if mdOut.version == "3.1":
+        particleTableName = "data_particles"
+    else:
+        particleTableName = "data_"
+
     print(" Subparticles (without subtraction):\t\t%s" % starfile1)
     # We convert back angles to degrees and write subparticles star file
-    def _writeMd(md, starfile):
+    def _writeMd(md, particleTableName, starfile):
         for subpart in md:
             angles_to_degrees(subpart)
-        md.addLabels(labels)
+        md.addLabels(particleTableName, labels)
         md.write(starfile)
 
-    _writeMd(mdOut, starfile1)
+    _writeMd(mdOut, particleTableName, starfile1)
 
     if len(mdOutSub):
         starfile2 = starfile1.replace('.star', '_subtracted.star')
         print(" Subparticles (with subtraction):\t\t%s" % starfile2)
-        _writeMd(mdOutSub, starfile2)
+        _writeMd(mdOutSub, particleTableName, starfile2)
 
 
 def split_star_to_random_subsets(inputStarRoot):
@@ -563,6 +594,20 @@ def split_star_to_random_subsets(inputStarRoot):
     md = MetaData(inputStarName)
     mdHalf1 = MetaData()
     mdHalf2 = MetaData()
+
+    if md.version == "3.1":
+        mdHalf1.version = "3.1"
+        mdHalf1.addDataTable("data_optics")
+        mdHalf1.addLabels("data_optics", md.getLabels("data_optics"))
+        mdHalf1.addData("data_optics", getattr(md, "data_optics"))
+
+        mdHalf2.version = "3.1"
+        mdHalf2.addDataTable("data_optics")
+        mdHalf2.addLabels("data_optics", md.getLabels("data_optics"))
+        mdHalf2.addData("data_optics", getattr(md, "data_optics"))
+        particleTableName = "data_particles"
+    else:
+        particleTableName = "data_"
 
     half1StarRoot = inputStarRoot+'_half1'
     half2StarRoot = inputStarRoot+'_half2'
@@ -579,11 +624,13 @@ def split_star_to_random_subsets(inputStarRoot):
         if particle.rlnRandomSubset % 2 == 0:
             particlesHalf2.append(particle.clone())
 
-    mdHalf1.addData(particlesHalf1)
-    mdHalf2.addData(particlesHalf2)
-    labels = md.getLabels()
-    mdHalf1.addLabels(labels)
-    mdHalf2.addLabels(labels)
+    mdHalf1.addDataTable(particleTableName)
+    mdHalf2.addDataTable(particleTableName)
+    mdHalf1.addData(particleTableName, particlesHalf1)
+    mdHalf2.addData(particleTableName, particlesHalf2)
+    labels = md.getLabels(particleTableName)
+    mdHalf1.addLabels(particleTableName, labels)
+    mdHalf2.addLabels(particleTableName, labels)
     mdHalf1.write(half1StarName)
     mdHalf2.write(half2StarName)
 
@@ -607,15 +654,19 @@ def reconstruct_subparticles(threads, output, maxres, sym, angpix, do_halves, li
         inputStarName = input + '.star'
         if os.path.exists(inputStarName):
             md = MetaData(inputStarName)
+            if md.version == "3.1":
+                particleTableName = "data_particles"
+            else:
+                particleTableName = "data_"
 
-            if "rlnDefocusU" in md.getLabels():
+            if "rlnDefocusU" in md.getLabels(particleTableName):
                 args = args + "--ctf "
             else:
                 print ("\nWarning: no CTF info found in %s!\n"
                        "The reconstruction will be performed without CTF correction.\n" % inputStarName)
 
             # reconstruct random halves to Nyquist frequency
-            if "rlnRandomSubset" in md.getLabels() and do_halves:
+            if "rlnRandomSubset" in md.getLabels(particleTableName) and do_halves:
                 half1Star, half2Star = split_star_to_random_subsets(input)
                 run_reconstruct(half1Star, "_class001_unfil", args)
                 run_reconstruct(half2Star, "_class001_unfil", args)
@@ -644,18 +695,40 @@ def run_command(command, output, library_path):
             proc = subprocess.Popen(command, shell=True, stdout=out, env=env)
             proc.wait()
 
-def unique_micrographs(md):
-    particles = []
+def unique_micrographs(md, outputPath, outputStar):
     seen = set()
-    unique_micrographs = []
+    mdUniqueMicrographs = MetaData()
+
+    if md.version == "3.1":
+        mdUniqueMicrographs.version = "3.1"
+        mdUniqueMicrographs.addDataTable("data_optics")
+        mdUniqueMicrographs.addLabels("data_optics", md.getLabels("data_optics"))
+        mdUniqueMicrographs.addData("data_optics", getattr(md, "data_optics"))
+        mdUniqueMicrographs.addDataTable("data_micrographs")
+        mdUniqueMicrographs.addLabels("data_micrographs", "rlnMicrographName", "rlnOpticsGroup")
+        particleTableName = "data_micrographs"
+    else:
+        particleTableName = "data_"
+        mdUniqueMicrographs.addDataTable("data_")
+        mdUniqueMicrographs.addLabels("data_", "rlnMicrographName", "rlnMagnification", "rlnDetectorPixelSize" )
+
+    class Item:
+        pass
 
     for particle in md:
-            particles.append(particle)
-
-    for particle in particles:
         if particle.rlnMicrographName not in seen:
-            unique_micrographs.append(particle)
+            item = Item()
+            setattr(item, "rlnMicrographName", particle.rlnMicrographName)
+            if md.version == "3.1":
+                setattr(item, "rlnOpticsGroup", particle.rlnOpticsGroup)
+            else:
+                setattr(item, "rlnMagnification", particle.rlnMagnification)
+                setattr(item, "rlnDetectorPixelSize", particle.rlnDetectorPixelSize)
+            mdUniqueMicrographs.addItem(particleTableName, item)
             seen.add(particle.rlnMicrographName)
+
+    mdUniqueMicrographs.write("%s/%s.star" % (outputPath, outputStar))
+
     return unique_micrographs
 
 class ProgressBar():
