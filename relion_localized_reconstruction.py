@@ -196,9 +196,41 @@ class LocalizedReconstruction():
             if not os.path.isdir(args.output):
                 raise
 
+            # Get particle / micrograph size; apix
+            if args.extract_from_micrographs:
+                if md.version == "3.1":
+                    mrcFilename = md.data_particles[0].rlnMicrographName
+                    if hasattr(md.data_optics[0], 'rlnMicrographOriginalPixelSize'):
+                        apix = md.data_optics[0].rlnMicrographOriginalPixelSize
+                        print("Using micrograph pixel size from star file: %s A/px" % apix)
+                    else
+                        apix = args.angpix
+                        print("Micrograph pixel size not found in star file, using user defined value: %s A/px" % apix)
+                else:
+                    mrcFilename = md.data_[0].rlnMicrographName
+                    apix = args.angpix
+                    print("Using user defined micrograph pixel size: %s A/px" % apix)
+                print("Micrograph image size:")
+            else:
+                if md.version == "3.1":
+                    mrcFilename = md.data_particles[0].rlnImageName
+                    apix = md.data_optics[0].rlnImagePixelSize
+                    print("Using particle pixel size from star file: %s A/px" % apix)
+                else:
+                    mrcFilename = md.data_[0].rlnImageName
+                    apix = args.angpix
+                    print("Using user defined particle pixel size: %s A/px" % apix)
+                print("Particle image size:")
+
+            mrcFile = open(mrcFilename, "rb")
+            particleImageSizeX = int(struct.unpack('i', mrcFile.read(4))[0])
+            particleImageSizeY = int(struct.unpack('i', mrcFile.read(4))[0])
+            mrcFile.close()
+            print("%s, %s pixels\n" % (particleImageSizeX, particleImageSizeY))
+
         if args.prepare_particles:
             print("Preparing particles for extracting subparticles.")
-            create_initial_stacks(args.input_star, args.angpix, args.masked_map, args.output, args.extract_from_micrographs, args.library_path)
+            create_initial_stacks(args.input_star, apix, args.masked_map, args.output, args.extract_from_micrographs, args.library_path)
             print("\nFinished preparing the particles!\n")
 
         if args.create_subparticles:
@@ -206,7 +238,7 @@ class LocalizedReconstruction():
             # command line (command and semi-colon separated)
             # Distances can also be specified to modify vector lengths
             subparticle_vector_list = load_vectors(args.cmm, args.vector,
-                                                   args.length, args.angpix)
+                                                   args.length, apix)
 
             particles_star = args.output + "/particles.star"
 
@@ -216,26 +248,6 @@ class LocalizedReconstruction():
                            % particles_star)
 
             md = MetaData(particles_star)
-
-            # Get particle / micrograph size
-            if args.extract_from_micrographs:
-                if md.version == "3.1":
-                    mrcFilename = md.data_particles[0].rlnMicrographName
-                else:
-                    mrcFilename = md.data_[0].rlnMicrographName
-                print("Micrograph image size:")
-            else:
-                if md.version == "3.1":
-                    mrcFilename = md.data_particles[0].rlnImageName
-                else:
-                    mrcFilename = md.data_[0].rlnImageName
-                print("Particle image size:")
-
-            mrcFile = open(mrcFilename, "rb")
-            particleImageSizeX = int(struct.unpack('i', mrcFile.read(4))[0])
-            particleImageSizeY = int(struct.unpack('i', mrcFile.read(4))[0])
-            mrcFile.close()
-            print("%s, %s pixels\n" % (particleImageSizeX, particleImageSizeY))
 
             print("Creating subparticles...")
 
@@ -286,7 +298,7 @@ class LocalizedReconstruction():
                                                        args.extract_from_micrographs,
                                                        True,
                                                        filters,
-                                                       args.angpix)
+                                                       apix)
 
                 mdOut.addData(particleTableName, subparticles)
                 mdOutSub.addData(particleTableName, subtracted)
@@ -318,7 +330,7 @@ class LocalizedReconstruction():
 
         if args.reconstruct_subparticles:
             print("Reconstructing subparticles...")
-            reconstruct_subparticles(args.j, args.output, args.maxres, args.subsym, args.angpix, args.do_halves, args.library_path)
+            reconstruct_subparticles(args.j, args.output, args.maxres, args.subsym, apix, args.do_halves, args.library_path)
             print("\nFinished reconstructing the subparticles!\n")
 
         print("\nAll done!\n")
