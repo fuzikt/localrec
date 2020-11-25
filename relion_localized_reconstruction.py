@@ -203,7 +203,7 @@ class LocalizedReconstruction():
                     if hasattr(md.data_optics[0], 'rlnMicrographOriginalPixelSize'):
                         apix = md.data_optics[0].rlnMicrographOriginalPixelSize
                         print("Using micrograph pixel size from star file: %s A/px" % apix)
-                    else
+                    else:
                         apix = args.angpix
                         print("Micrograph pixel size not found in star file, using user defined value: %s A/px" % apix)
                 else:
