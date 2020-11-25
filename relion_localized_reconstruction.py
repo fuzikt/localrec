@@ -265,6 +265,12 @@ class LocalizedReconstruction():
             mdOutSub = MetaData()
 
             if md.version == "3.1":
+
+                #if extracted from micrographs set the image apix same as micrograph
+                if args.extract_from_micrographs:
+                    for optic_group in md.data_optics:
+                        optic_group.rlnImagePixelSize = apix
+
                 mdOut.version = "3.1"
                 mdOut.addDataTable("data_optics")
                 mdOut.addLabels("data_optics", md.getLabels("data_optics"))
