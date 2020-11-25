@@ -204,10 +204,8 @@ def create_subparticles(particle, symmetry_matrices, subparticle_vector_list,
 
             if hasattr(particle, 'rlnOriginXAngst'):
                 #Relion31 star
-                #print(m.m)
-                #print(vector_from_two_eulers(rotNew, tiltNew).print_vector())
-                x = -m.m[0][2] * (d + particle.rlnOriginXAngst / ang_pix)
-                y = -m.m[1][2] * (d + particle.rlnOriginYAngst / ang_pix)
+                x = -m.m[0][2] * d + particle.rlnOriginXAngst / ang_pix
+                y = -m.m[1][2] * d + particle.rlnOriginYAngst / ang_pix
             else:
                 #Relion3 star
                 x = -m.m[0][2] * d + particle.rlnOriginX
@@ -232,7 +230,7 @@ def create_subparticles(particle, symmetry_matrices, subparticle_vector_list,
                 subpart.rlnCoordinateX = particle.rlnCoordinateX - x_i
                 subpart.rlnCoordinateY = particle.rlnCoordinateY - y_i
 
-            if hasattr(particle, 'particle.rlnOriginXAngst'):
+            if hasattr(particle, 'rlnOriginXAngst'):
                 #Relion31 star
                 subpart.rlnOriginXAngst = x_d * ang_pix
                 subpart.rlnOriginYAngst = y_d * ang_pix
