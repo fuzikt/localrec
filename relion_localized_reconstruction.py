@@ -196,37 +196,40 @@ class LocalizedReconstruction():
             if not os.path.isdir(args.output):
                 raise
 
-            # Get particle / micrograph size; apix
-            if args.extract_from_micrographs:
-                if md.version == "3.1":
-                    mrcFilename = md.data_particles[0].rlnMicrographName
-                    if hasattr(md.data_optics[0], 'rlnMicrographOriginalPixelSize'):
-                        apix = md.data_optics[0].rlnMicrographOriginalPixelSize
-                        print("Using micrograph pixel size from star file: %s A/px" % apix)
-                    else:
-                        apix = args.angpix
-                        print("Micrograph pixel size not found in star file, using user defined value: %s A/px" % apix)
-                else:
-                    mrcFilename = md.data_[0].rlnMicrographName
-                    apix = args.angpix
-                    print("Using user defined micrograph pixel size: %s A/px" % apix)
-                print("Micrograph image size:")
-            else:
-                if md.version == "3.1":
-                    mrcFilename = md.data_particles[0].rlnImageName
-                    apix = md.data_optics[0].rlnImagePixelSize
-                    print("Using particle pixel size from star file: %s A/px" % apix)
-                else:
-                    mrcFilename = md.data_[0].rlnImageName
-                    apix = args.angpix
-                    print("Using user defined particle pixel size: %s A/px" % apix)
-                print("Particle image size:")
 
-            mrcFile = open(mrcFilename, "rb")
-            particleImageSizeX = int(struct.unpack('i', mrcFile.read(4))[0])
-            particleImageSizeY = int(struct.unpack('i', mrcFile.read(4))[0])
-            mrcFile.close()
-            print("%s, %s pixels\n" % (particleImageSizeX, particleImageSizeY))
+        md_in = MetaData(args.input_star)
+
+        if md_in.version == "3.1":
+            if args.extract_from_micrographs:
+                mrcFilename = md_in.data_particles[0].rlnMicrographName
+                if hasattr(md_in.data_optics[0], 'rlnMicrographOriginalPixelSize'):
+                    apix = md_in.data_optics[0].rlnMicrographOriginalPixelSize
+                    print("Using micrograph pixel size from star file: %s A/px" % apix)
+                else:
+                    apix = args.angpix
+                    print("Micrograph pixel size not found in star file, using user defined value: %s A/px" % apix)
+            else:
+                mrcFilename = md_in.data_particles[0].rlnImageName
+                apix = md_in.data_optics[0].rlnImagePixelSize
+                print("Using particle pixel size from star file: %s A/px" % apix)
+        else:
+            apix = args.angpix
+            print("Using user defined pixel size: %s A/px" % apix)
+            if args.extract_from_micrographs:
+                mrcFilename = md_in.data_[0].rlnMicrographName
+            else:
+                mrcFilename = md_in.data_[0].rlnImageName
+
+
+        mrcFile = open(mrcFilename, "rb")
+        particleImageSizeX = int(struct.unpack('i', mrcFile.read(4))[0])
+        particleImageSizeY = int(struct.unpack('i', mrcFile.read(4))[0])
+        mrcFile.close()
+        if args.extract_from_micrographs:
+            print("Micrograph image size:")
+        else:
+            print("Particle image size:")
+        print("%s, %s pixels\n" % (particleImageSizeX, particleImageSizeY))
 
         if args.prepare_particles:
             print("Preparing particles for extracting subparticles.")
@@ -268,8 +271,8 @@ class LocalizedReconstruction():
 
                 #if extracted from micrographs set the image apix same as micrograph
                 if args.extract_from_micrographs:
-                    for optic_group in md.data_optics:
-                        optic_group.rlnImagePixelSize = apix
+                    for optic_group_nr in range(md.size('data_optics')):
+                        md.data_optics[optic_group_nr].rlnImagePixelSize = apix
 
                 mdOut.version = "3.1"
                 mdOut.addDataTable("data_optics")

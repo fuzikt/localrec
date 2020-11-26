@@ -422,7 +422,7 @@ def splitMrcStack(stackFile, outFile):
     mrcsFile.close()
     mrcFile.close()
 
-def split_particle_stacks(extract_from_micrographs, inputStar, inputStack, output, filename_prefix, deleteStack):
+def split_particle_stacks(extract_from_micrographs, angpix, inputStar, inputStack, output, filename_prefix, deleteStack):
     """ Read a STAR file with particles and write as individual images.
     If a stack of images is given, use these instead of the images from the STAR file.
     Also write a new STAR file pointing to these images.
@@ -431,6 +431,11 @@ def split_particle_stacks(extract_from_micrographs, inputStar, inputStack, outpu
     md = MetaData(inputStar)
     if md.version == "3.1":
         particleTableName = "data_particles"
+        # if extracted from micrographs set the image apix same as micrograph
+        if extract_from_micrographs:
+            for optic_group_nr in range(md.size('data_optics')):
+                md.data_optics[optic_group_nr].rlnImagePixelSize = angpix
+                md.data_optics[optic_group_nr].rlnMicrographPixelSize = angpix
     else:
         particleTableName = "data_"
 
@@ -472,7 +477,7 @@ def create_initial_stacks(input_star, angpix, masked_map, output, extract_from_m
     another stack with subtracted particles will be created. """
 
     print(" Creating particle images from which nothing is subtracted...")
-    split_particle_stacks(extract_from_micrographs, input_star, None, output, 'particles', deleteStack=False)
+    split_particle_stacks(extract_from_micrographs, angpix, input_star, None, output, 'particles', deleteStack=False)
 
     if masked_map:
         print(" Creating particle images from which the projections of the masked "
@@ -498,7 +503,7 @@ def create_initial_stacks(input_star, angpix, masked_map, output, extract_from_m
 
         subtractedStack = subtractedStackRoot + '.mrcs'
 
-        split_particle_stacks(extract_from_micrographs, input_star, subtractedStack, output, 'particles_subtracted', deleteStack=True)
+        split_particle_stacks(extract_from_micrographs, angpix, input_star, subtractedStack, output, 'particles_subtracted', deleteStack=True)
 
 
 def extract_subparticles(subpart_size, np, masked_map, output, library_path, only_extract_unfinished, invert_contrast, normalize, deleteParticles, outDir):
