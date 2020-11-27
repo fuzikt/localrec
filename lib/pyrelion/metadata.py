@@ -366,7 +366,7 @@ LABELS = {
     'rlnNrHelicalAsymUnits': int,  # How many new helical asymmetric units are there in each box
     'rlnNrHelicalNStart': int,  # The N-number for an N-start helix
     'rlnNrOfFrames': int,  # Number of movie frames that were collected for this particle
-    'rlnNrOfSignificantSamples': float,
+    'rlnNrOfSignificantSamples': int,
     # Number of orientational/class assignments': for a particle) with sign.probabilities in the 1st pass of adaptive oversampling
     'rlnNumberOfIterWithoutChangingAssignments': int,
     # Number of iterations that have passed without large changes in orientation and class assignments
@@ -708,8 +708,8 @@ class MetaData:
     def setLabels(self, dataTableName, **kwargs):
         """ Add (or set) labels with a given value. """
         for key, value in kwargs.items():
-            if key not in getattr(self, dataTableName + "_labels"):
-                getattr(self, dataTableName + "_labels")._addLabel(labelName=key)
+            if key not in getattr(self, dataTableName + "_labels").keys():
+                self._addLabel(dataTableName, key)
 
         for item in getattr(self, dataTableName):
             for key, value in kwargs.items():
