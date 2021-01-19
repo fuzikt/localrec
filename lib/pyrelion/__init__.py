@@ -1,2 +1,2 @@
 
-from metadata import *
+from .metadata import *

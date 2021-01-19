@@ -35,8 +35,8 @@ import textwrap
 from distutils import spawn
 import argparse
 
-from .lib.localrec.localized_reconstruction import *
-from .lib.pyrelion import MetaData
+from lib.localrec import *
+from lib.pyrelion import MetaData
 
 
 class LocalizedReconstruction():

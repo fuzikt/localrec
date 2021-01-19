@@ -28,7 +28,12 @@ import math
 import random
 import shutil
 import struct
-from itertools import izip
+try:
+    # Python 2
+    from itertools import izip
+except ImportError:
+    # Python 3
+    izip = zip
 from glob import glob
 from .matrix3 import *
 from .vector3 import *
@@ -495,7 +500,7 @@ def create_initial_stacks(input_star, angpix, masked_map, output, extract_from_m
         if "rlnDefocusU" in md.getLabels(particleTableName):
             args = args + "--ctf "
         else:
-            print ("\nWarning: no CTF info found in %s!\n"
+            print("\nWarning: no CTF info found in %s!\n"
                    "The subtraction will be performed without CTF correction.\n" % input_star)
         run_command("relion_project" + args %
                     (masked_map, subtractedStackRoot, input_star, angpix),"",library_path)
@@ -665,7 +670,7 @@ def reconstruct_subparticles(threads, output, maxres, sym, angpix, do_halves, li
             if "rlnDefocusU" in md.getLabels(particleTableName):
                 args = args + "--ctf "
             else:
-                print ("\nWarning: no CTF info found in %s!\n"
+                print("\nWarning: no CTF info found in %s!\n"
                        "The reconstruction will be performed without CTF correction.\n" % inputStarName)
 
             # reconstruct random halves to Nyquist frequency
@@ -686,7 +691,7 @@ def run_command(command, output, library_path):
     env = os.environ.copy()
     try:
         env['LD_LIBRARY_PATH'] = env['LD_LIBRARY_PATH']+":"+library_path
-    except
+    except:
         env['LD_LIBRARY_PATH'] = library_path
 
     if not output:
