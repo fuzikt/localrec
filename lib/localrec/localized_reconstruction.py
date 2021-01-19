@@ -30,15 +30,15 @@ import shutil
 import struct
 from itertools import izip
 from glob import glob
-from matrix3 import *
-from vector3 import *
-from euler import *
+from .matrix3 import *
+from .vector3 import *
+from .euler import *
 from os.path import splitext
 from os.path import basename
 from os.path import exists
 from os.path import isdir
 from os.path import islink
-from pyrelion import MetaData
+from ..pyrelion import MetaData
 
 
 def cleanPath(*paths):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # **************************************************************************
 # *
@@ -35,8 +35,8 @@ import textwrap
 from distutils import spawn
 import argparse
 
-from localrec import *
-from pyrelion import MetaData
+from .lib.localrec.localized_reconstruction import *
+from .lib.pyrelion import MetaData
 
 
 class LocalizedReconstruction():

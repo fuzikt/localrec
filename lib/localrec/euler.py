@@ -24,7 +24,7 @@
 # **************************************************************************
 
 from math import *
-import vector3
+import .vector3
 
 
 def euler_from_matrix(matrix):

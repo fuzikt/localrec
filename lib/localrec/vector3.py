@@ -25,8 +25,8 @@
 
 import re
 from math import *
-from euler import euler_from_vector
-from matrix3 import matrix_from_euler
+from .euler import euler_from_vector
+from .matrix3 import matrix_from_euler
 
 
 class Vector3:
