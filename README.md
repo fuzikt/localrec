@@ -2,9 +2,21 @@
 
 Localized reconstruction of flexible subunits from macromolecular complexes.
 
-Version: 1.3.0
+Version: 1.4.0
+
+RELION 3.1 compatible particle extraction.
+
+NO Scipion needed to run!!!
 
 ### New features added
+
+- compatible with Relion 3.1 star files, backward compatible with Relion 3.0 star files (be aware to use the right version of relion for extraction)
+
+- for Relion 3.1 star files automatically reads the apix from star file
+
+- for Relion 3.1 star files binned particle star file can be used for extraction from micrographs (for Relion 3.0 star files the star file needs to be "unbinned first")
+
+Changes in 1.3.0 version:
 
 RELION 3 compatible particle extraction.
 NO Scipion needed to run!!!
