@@ -209,7 +209,7 @@ class LocalizedReconstruction():
                     apix = args.angpix
                     print("Micrograph pixel size not found in star file, using user defined value: %s A/px" % apix)
             else:
-                mrcFilename = md_in.data_particles[0].rlnImageName
+                mrcFilename = md_in.data_particles[0].rlnImageName.split("@")[1]
                 apix = md_in.data_optics[0].rlnImagePixelSize
                 print("Using particle pixel size from star file: %s A/px" % apix)
         else:
@@ -218,7 +218,7 @@ class LocalizedReconstruction():
             if args.extract_from_micrographs:
                 mrcFilename = md_in.data_[0].rlnMicrographName
             else:
-                mrcFilename = md_in.data_[0].rlnImageName
+                mrcFilename = md_in.data_[0].rlnImageName.split("@")[1]
 
 
         mrcFile = open(mrcFilename, "rb")
