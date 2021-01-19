@@ -158,13 +158,13 @@ def vectors_from_cmm(input_cmm, angpix):
             for i in range(len(line_values)):
                 if 'x=' in line_values[i]:
                     a = re.search('"(.*)"', line_values[i]).group(0)
-                    x = float(a.translate(None, '""'))/angpix
+                    x = float(a.translate(str.maketrans({'"':''})))/angpix
                 if 'y=' in line_values[i]:
                     b = re.search('"(.*)"', line_values[i]).group(0)
-                    y = float(b.translate(None, '""'))/angpix
+                    y = float(b.translate(str.maketrans({'"':''})))/angpix
                 if 'z=' in line_values[i]:
                     c = re.search('"(.*)"', line_values[i]).group(0)
-                    z = float(c.translate(None, '""'))/angpix
+                    z = float(c.translate(str.maketrans({'"':''})))/angpix
        
             if counter != 0:
                 vector = Vector3(None)
