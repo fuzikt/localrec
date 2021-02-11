@@ -689,9 +689,9 @@ def run_command(command, output, library_path):
     import subprocess
 
     try:
-        os.environ["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"]+":"+library_path
+        env['LD_LIBRARY_PATH'] = env['LD_LIBRARY_PATH']+":"+library_path
     except:
-        os.environ["LD_LIBRARY_PATH"] = library_path
+        env['LD_LIBRARY_PATH'] = library_path
 
 
     if not output:
