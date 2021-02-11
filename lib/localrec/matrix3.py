@@ -72,8 +72,10 @@ class Matrix3:
 def run_command(command, output, library_path):
     import subprocess
 
-    env = os.environ.copy()
-    env['LD_LIBRARY_PATH'] = env['LD_LIBRARY_PATH']+":"+library_path
+    try:
+        os.environ["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"]+":"+library_path
+    except:
+        os.environ["LD_LIBRARY_PATH"] = library_path
 
     if not output:
         print("+++ " + command)
