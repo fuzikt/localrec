@@ -688,6 +688,7 @@ def reconstruct_subparticles(threads, output, maxres, sym, angpix, do_halves, li
 def run_command(command, output, library_path):
     import subprocess
 
+    env = os.environ.copy()
     try:
         env['LD_LIBRARY_PATH'] = env['LD_LIBRARY_PATH']+":"+library_path
     except:
