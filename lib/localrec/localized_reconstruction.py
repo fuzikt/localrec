@@ -415,7 +415,8 @@ def splitMrcStack(stackFile, outFile):
 
     # change Z dimension to 1
     mrcFile.seek(8, 0)
-    mrcFile.write(b"\x01")
+    mrcFile.write(b"\x01\x00")
+
     mrcFile.seek(1024, 0)
 
     # write mrc data file
