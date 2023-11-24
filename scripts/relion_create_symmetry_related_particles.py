@@ -1,8 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # **************************************************************************
 # *
 # * Author:  Juha T. Huiskonen (juha@strubi.ox.ac.uk)
+# *          Tibor Fuzik (tibor.fuzik@ceitec.muni.cz)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -23,10 +24,10 @@
 
 import os
 import sys
-
-from pyrelion import MetaData
-from localrec import *
 import argparse
+
+sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir))
+from lib.localrec import *
 
 
 class CreateSymmetryRelatedParticles():
@@ -47,8 +48,8 @@ class CreateSymmetryRelatedParticles():
 
     def error(self, *msgs):
         self.usage()
-        print "Error: " + '\n'.join(msgs)
-        print " "
+        print("Error: " + '\n'.join(msgs))
+        print(" ")
         sys.exit(2)
 
     def validate(self, args):
@@ -65,12 +66,12 @@ class CreateSymmetryRelatedParticles():
 
         self.validate(args)
 
-        print "Creating symmetry related particles..."
+        print("Creating symmetry related particles...")
 
         md = MetaData(args.input_star)
         mdOut = MetaData()
         mdOut.addLabels(md.getLabels())
-        
+
         new_particles = []
 
         symmetry_matrices = matrix_from_symmetry(args.sym)
@@ -78,12 +79,24 @@ class CreateSymmetryRelatedParticles():
         for particle in md:
             angles_to_radians(particle)
             new_particles.extend(create_symmetry_related_particles(particle, symmetry_matrices, args.random))
-        mdOut.addData(new_particles)
+
+        if md.version == "3.1":
+            mdOut = md.clone()
+            dataTableName = "data_particles"
+            mdOut.removeDataTable(dataTableName)
+        else:
+            mdOut = MetaData()
+            dataTableName = "data_"
+
+        mdOut.addDataTable(dataTableName, md.isLoop(dataTableName))
+        mdOut.addLabels(dataTableName, md.getLabels(dataTableName))
+        mdOut.addData(dataTableName, new_particles)
+
         mdOut.write(args.output)
 
-        print "All done!"
-        print " "
+        print("All done!")
+        print(" ")
+
 
 if __name__ == "__main__":
-
     CreateSymmetryRelatedParticles().main()

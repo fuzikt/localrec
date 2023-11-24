@@ -92,8 +92,7 @@ class CreateSymmetryRelatedParticles():
             sys.exit(0)
 
         new_particles = []
-        #    mdOut = MetaData()
-        #   mdOut.addLabels(md.getLabels())
+
         for particle in md:
             new_particle = particle.clone()
 

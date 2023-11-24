@@ -1,8 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # **************************************************************************
 # *
 # * Author:  Juha T. Huiskonen (juha@strubi.ox.ac.uk)
+# *          Tibor Fuzik (tibor.fuzik@ceitec.muni.cz)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -23,10 +24,11 @@
 
 import os
 import sys
-
-from pyrelion import MetaData
 import argparse
 from collections import OrderedDict
+
+sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir))
+from lib.pyrelion import MetaData
 
 
 class RemoveOverlappingParticles():
@@ -47,8 +49,8 @@ class RemoveOverlappingParticles():
 
     def error(self, *msgs):
         self.usage()
-        print "Error: " + '\n'.join(msgs)
-        print " "
+        print("Error: " + '\n'.join(msgs))
+        print(" ")
         sys.exit(2)
 
     def validate(self, args):
@@ -105,7 +107,7 @@ class RemoveOverlappingParticles():
 
         self.validate(args)
 
-        print "Remove overlapping particles..."
+        print("Remove overlapping particles...")
 
         md = MetaData(args.input_star)
         mdOut = MetaData()
@@ -121,16 +123,27 @@ class RemoveOverlappingParticles():
             micrographs = self.get_micrographs(md)
 
         for micrograph in micrographs:
-            print "Processing micrograph %s..." % micrograph,
+            print("Processing micrograph %s..." % micrograph)
             particles = self.get_particles(md, micrograph)
             particles_unique = self.remove_overlapping_particles(particles, args.mindist)
             new_particles.extend(particles_unique)
-            print "%s particle(s) kept." % len(particles_unique)
+            print("%s particle(s) kept." % len(particles_unique))
 
-        mdOut.addData(new_particles)
+        if md.version == "3.1":
+            mdOut = md.clone()
+            dataTableName = "data_particles"
+            mdOut.removeDataTable(dataTableName)
+        else:
+            mdOut = MetaData()
+            dataTableName = "data_"
+
+        mdOut.addDataTable(dataTableName, md.isLoop(dataTableName))
+        mdOut.addLabels(dataTableName, md.getLabels(dataTableName))
+        mdOut.addData(dataTableName, new_particles)
+
         mdOut.write(args.output)
 
-        print "All done!"
+        print("All done!")
 
 
 if __name__ == "__main__":
