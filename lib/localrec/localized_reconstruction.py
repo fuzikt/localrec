@@ -530,7 +530,10 @@ def extract_subparticles(subpart_size, rescale_size, np, masked_map, output, lib
     if invert_contrast:
         additional_parameters = additional_parameters+' --invert_contrast'
     if normalize:
-        bg_radius = int(0.75*subpart_size/2)
+        if rescale_size > 0:
+            bg_radius = int(0.75*rescale_size/2)
+        else:
+            bg_radius = int(0.75*subpart_size/2)
         additional_parameters = additional_parameters+' --norm --bg_radius '+str(bg_radius)
     if rescale_size > 0:
         additional_parameters = additional_parameters+' --scale '+str(rescale_size)
