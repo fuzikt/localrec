@@ -341,7 +341,7 @@ class LocalizedReconstruction():
 
         if args.reconstruct_subparticles:
             print("Reconstructing subparticles...")
-            md_out = MetaData(args.output)
+            md_out = MetaData(args.output+".star")
             apix = md_out.data_optics[0].rlnImagePixelSize
             reconstruct_subparticles(args.j, args.output, args.maxres, args.subsym, apix, args.do_halves, args.library_path)
             print("\nFinished reconstructing the subparticles!\n")
