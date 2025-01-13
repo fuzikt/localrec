@@ -126,6 +126,8 @@ class LocalizedReconstruction():
         # Parameters for "Extract subparticles" group
         addes('--subparticle_size', type=int,
             help="Size of the subparticle box (pixels).")
+        addes('--rescale_size', type=int, default=-1,
+              help="Rescale (bin) subparticle to this box (pixels). (Default: -1 => no rescale)")
         addes('--np', type=int, default=1, help="Number of MPI procs. (default: 1)")
         addes('--only_extract_unfinished', action='store_true',
               help="Extract only particles not extracted in previous run.")
@@ -332,9 +334,9 @@ class LocalizedReconstruction():
             if args.extract_from_micrographs:
                 if not args.create_subparticles:
                     md = MetaData(args.output + "/particles.star")                    
-                extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.invert_contrast, args.normalize, False, getattr(md,particleTableName)[-2].rlnMicrographName.split('/').pop(0))
+                extract_subparticles(args.subparticle_size, args.rescale_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.invert_contrast, args.normalize, False, getattr(md,particleTableName)[-2].rlnMicrographName.split('/').pop(0))
             else:
-                extract_subparticles(args.subparticle_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.invert_contrast, args.normalize, True, args.output)
+                extract_subparticles(args.subparticle_size, args.rescale_size, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.invert_contrast, args.normalize, True, args.output)
             print("\nFinished extracting the subparticles!\n")
 
         if args.reconstruct_subparticles:

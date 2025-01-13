@@ -512,7 +512,7 @@ def create_initial_stacks(input_star, angpix, masked_map, output, extract_from_m
         split_particle_stacks(extract_from_micrographs, angpix, input_star, subtractedStack, output, 'particles_subtracted', deleteStack=True)
 
 
-def extract_subparticles(subpart_size, np, masked_map, output, library_path, only_extract_unfinished, invert_contrast, normalize, deleteParticles, outDir):
+def extract_subparticles(subpart_size, rescale_size, np, masked_map, output, library_path, only_extract_unfinished, invert_contrast, normalize, deleteParticles, outDir):
     """ Extract subparticles images from each particle
     (Using 'relion_preprocess' as if the particle was a micrograph.
     Notice that this command line works only in Relion 1.4, not 2.0"""
@@ -532,6 +532,8 @@ def extract_subparticles(subpart_size, np, masked_map, output, library_path, onl
     if normalize:
         bg_radius = int(0.75*subpart_size/2)
         additional_parameters = additional_parameters+' --norm --bg_radius '+str(bg_radius)
+    if rescale_size > 0:
+        additional_parameters = additional_parameters+' --scale '+str(rescale_size)
 
     def run_extract(suffix=''):
         args = ('--i "%s/micrographs%s.star" --part_star subparticles_tmp.star --extract --extract_size %s --reextract_data_star '
