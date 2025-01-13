@@ -445,7 +445,7 @@ def split_particle_stacks(extract_from_micrographs, angpix, inputStar, inputStac
     else:
         particleTableName = "data_"
 
-    md.addLabels(particleTableName, 'rlnOriginalName')
+    md.addLabels(particleTableName, 'rlnOriginalParticleName')
 
     # Initialize progress bar
     progressbar = ProgressBar(width=60, total=len(md))
@@ -457,14 +457,14 @@ def split_particle_stacks(extract_from_micrographs, angpix, inputStar, inputStac
         if not extract_from_micrographs:
             if inputStack:
                 splitMrcStack('%06d@%s' %(i, inputStack), outputImageName)
-                particle.rlnOriginalName = '%s/%06d@%s' %(output, i, inputStack)
+                particle.rlnOriginalParticleName = '%s/%06d@%s' %(output, i, inputStack)
             else:
                 splitMrcStack(particle.rlnImageName, outputImageName)
-                particle.rlnOriginalName = particle.rlnImageName
+                particle.rlnOriginalParticleName = particle.rlnImageName
             particle.rlnImageName = outputImageName
             particle.rlnMicrographName = outputImageName
         else:
-            particle.rlnOriginalName = particle.rlnImageName
+            particle.rlnOriginalParticleName = particle.rlnImageName
             particle.rlnImageName = '%s/%s' % (output, particle.rlnMicrographName.split('/').pop())
 
         progressbar.notify()

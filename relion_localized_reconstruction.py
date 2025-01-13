@@ -316,7 +316,7 @@ class LocalizedReconstruction():
 
                 progressbar.notify()
 
-            md.removeLabels(particleTableName, 'rlnOriginZ', 'rlnOriginalName')
+            md.removeLabels(particleTableName, 'rlnOriginZ')
 
             write_output_starfiles(md.getLabels(particleTableName), mdOut, mdOutSub, args.output)
 
