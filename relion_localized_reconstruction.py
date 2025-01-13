@@ -277,21 +277,21 @@ class LocalizedReconstruction():
                         md.data_optics[optic_group_nr].rlnImagePixelSize = apix
 
                 mdOut.version = "3.1"
-                mdOut.addDataTable("data_optics")
+                mdOut.addDataTable("data_optics", True)
                 mdOut.addLabels("data_optics", md.getLabels("data_optics"))
                 mdOut.addData("data_optics", getattr(md, "data_optics"))
-                mdOut.addDataTable("data_particles")
+                mdOut.addDataTable("data_particles", True)
 
                 mdOutSub.version = "3.1"
-                mdOutSub.addDataTable("data_optics")
+                mdOutSub.addDataTable("data_optics", True)
                 mdOutSub.addLabels("data_optics", md.getLabels("data_optics"))
                 mdOutSub.addData("data_optics", getattr(md, "data_optics"))
-                mdOutSub.addDataTable("data_particles")
+                mdOutSub.addDataTable("data_particles", True)
 
                 particleTableName = "data_particles"
             else:
-                mdOut.addDataTable("data_")
-                mdOutSub.addDataTable("data_")
+                mdOut.addDataTable("data_", True)
+                mdOutSub.addDataTable("data_", True)
                 particleTableName = "data_"
 
             for particle in md:

@@ -611,12 +611,12 @@ def split_star_to_random_subsets(inputStarRoot):
 
     if md.version == "3.1":
         mdHalf1.version = "3.1"
-        mdHalf1.addDataTable("data_optics")
+        mdHalf1.addDataTable("data_optics", True)
         mdHalf1.addLabels("data_optics", md.getLabels("data_optics"))
         mdHalf1.addData("data_optics", getattr(md, "data_optics"))
 
         mdHalf2.version = "3.1"
-        mdHalf2.addDataTable("data_optics")
+        mdHalf2.addDataTable("data_optics", True)
         mdHalf2.addLabels("data_optics", md.getLabels("data_optics"))
         mdHalf2.addData("data_optics", getattr(md, "data_optics"))
         particleTableName = "data_particles"
@@ -638,8 +638,8 @@ def split_star_to_random_subsets(inputStarRoot):
         if particle.rlnRandomSubset % 2 == 0:
             particlesHalf2.append(particle.clone())
 
-    mdHalf1.addDataTable(particleTableName)
-    mdHalf2.addDataTable(particleTableName)
+    mdHalf1.addDataTable(particleTableName, True)
+    mdHalf2.addDataTable(particleTableName, True)
     mdHalf1.addData(particleTableName, particlesHalf1)
     mdHalf2.addData(particleTableName, particlesHalf2)
     labels = md.getLabels(particleTableName)
@@ -719,15 +719,15 @@ def unique_micrographs(md, outputPath, outputStar):
 
     if md.version == "3.1":
         mdUniqueMicrographs.version = "3.1"
-        mdUniqueMicrographs.addDataTable("data_optics")
+        mdUniqueMicrographs.addDataTable("data_optics", True)
         mdUniqueMicrographs.addLabels("data_optics", md.getLabels("data_optics"))
         mdUniqueMicrographs.addData("data_optics", getattr(md, "data_optics"))
-        mdUniqueMicrographs.addDataTable("data_micrographs")
+        mdUniqueMicrographs.addDataTable("data_micrographs", True)
         mdUniqueMicrographs.addLabels("data_micrographs", "rlnMicrographName", "rlnOpticsGroup")
         particleTableName = "data_micrographs"
     else:
         particleTableName = "data_"
-        mdUniqueMicrographs.addDataTable("data_")
+        mdUniqueMicrographs.addDataTable("data_", True)
         mdUniqueMicrographs.addLabels("data_", "rlnMicrographName", "rlnMagnification", "rlnDetectorPixelSize" )
 
     class Item:
