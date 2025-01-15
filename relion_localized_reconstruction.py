@@ -28,13 +28,9 @@
 # **************************************************************************
 
 
-import os
-import sys
 import textwrap
-
-from distutils import spawn
+from shutil import which
 import argparse
-
 from lib.localrec import *
 from lib.pyrelion import MetaData
 
@@ -162,7 +158,7 @@ class LocalizedReconstruction():
             self.usage()
         # Check that required software is in PATH
 
-        if not (spawn.find_executable("relion_refine")):
+        if not (which("relion_refine")):
             self.error("Relion not found.",
                        "Make sure Relion programs are in $PATH.")
 
