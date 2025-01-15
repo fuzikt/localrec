@@ -143,6 +143,12 @@ class LocalizedReconstruction():
         addeo('--library_path', type=str, default='',
               help="define LD_LIBRARY_PATH used. Default: empty")
 
+    def print_args(self, args):
+        # print out the settings of all input arguments
+        print("Input arguments:")
+        for arg in vars(args):
+            print("  %s: %s" % (arg, getattr(args, arg)))
+        print(" ")
 
     def usage(self):
         self.parser.print_help()
@@ -187,6 +193,9 @@ class LocalizedReconstruction():
 
         # Validate input arguments and required software
         self.validate(args)
+
+        # Print out the settings of all input arguments
+        self.print_args(args)
 
         try: 
             os.makedirs(args.output)
