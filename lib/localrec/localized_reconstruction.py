@@ -544,12 +544,10 @@ def extract_subparticles(subpart_size, rescale_size, np, masked_map, output, lib
 
         print(" Cleaning up temporary files...")
 
-        f = open('subparticles_tmp.star','r')
-        filedata = f.read()
-        f.close()
-        f = open('%s%s.star' % (output,suffix),'w')
-        f.write(filedata.replace('Particles/%s' % outDir, output))
-        f.close()
+        md = MetaData('subparticles_tmp.star')
+        for particle in md:
+            particle.rlnImageName = particle.rlnImageName.replace('Particles/%s' % outDir, output)
+        md.write('%s%s.star' % (output,suffix))
 
         try:
             os.remove('%s.star' % 'subparticles_tmp')
