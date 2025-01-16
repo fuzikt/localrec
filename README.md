@@ -21,10 +21,13 @@ Changes in 1.5.0 version
 - The run command with all parameters is stored in the output star file as comment at the beginning of the file.
 
 New options for extraction:
+
 --rescale_size
 Rescale (bin) subparticle to this box (pixels). (Default: -1 => no rescale)
+
 --float16
 Use float16 format for the output MRC files.
+
 --no_ramp
 Just subtract the background mean in the normalisation, instead of subtracting a fitted ramping background."
 
