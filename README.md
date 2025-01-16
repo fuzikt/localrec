@@ -2,9 +2,9 @@
 
 Localized reconstruction of flexible subunits from macromolecular complexes.
 
-Version: 1.4.0
+Version: 1.5.0
 
-RELION 3.1 compatible particle extraction.
+RELION 3.1+ compatible particle extraction.
 
 NO Scipion needed to run!!!
 
@@ -15,6 +15,19 @@ NO Scipion needed to run!!!
 - for Relion 3.1 star files automatically reads the apix from star file
 
 - for Relion 3.1 star files binned particle star file can be used for extraction from micrographs (for Relion 3.0 star files the star file needs to be "unbinned first")
+
+Changes in 1.5.0 version
+- Originating particle of the subparticle is stored in rlnOriginalParticle in the output star file.
+- The run command with all parameters is stored in the output star file as comment at the beginning of the file.
+
+New options for extraction:
+--rescale_size
+Rescale (bin) subparticle to this box (pixels). (Default: -1 => no rescale)
+--float16
+Use float16 format for the output MRC files.
+--no_ramp
+Just subtract the background mean in the normalisation, instead of subtracting a fitted ramping background."
+
 
 Changes in 1.3.0 version:
 
