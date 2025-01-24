@@ -202,9 +202,20 @@ class LocalizedReconstruction():
         try: 
             os.makedirs(args.output)
         except OSError:
-            if not os.path.isdir(args.output):
+            if FileExistsError:
+                print("ERROR: Output directory already exists. Please remove it or specify a different output directory.")
+                exit()
+            else:
                 raise
 
+        try:
+            os.makedirs(args.output + "_tmp")
+        except OSError:
+            if FileExistsError:
+                shutil.rmtree(args.output + "_tmp")
+                os.makedirs(args.output + "_tmp")
+            else:
+                raise
 
         md_in = MetaData(args.input_star)
 
@@ -242,7 +253,7 @@ class LocalizedReconstruction():
 
         if args.prepare_particles:
             print("Preparing particles for extracting subparticles.")
-            create_initial_stacks(args.input_star, apix, args.masked_map, args.output, args.extract_from_micrographs, args.library_path)
+            create_initial_stacks(args.input_star, apix, args.masked_map, args.output+"_tmp", args.extract_from_micrographs, args.library_path)
             print("\nFinished preparing the particles!\n")
 
         if args.create_subparticles:
@@ -252,9 +263,9 @@ class LocalizedReconstruction():
             subparticle_vector_list = load_vectors(args.cmm, args.vector,
                                                    args.length, apix)
 
-            particles_star = args.output + "/particles.star"
+            particles_star = args.output+"_tmp" + "/particles.star"
 
-            if not os.path.exists(args.output + "/particles.star"):
+            if not os.path.exists(args.output+"_tmp" + "/particles.star"):
                 self.error("Input file '%s not found. "
                            "Run the script first with --prepare_particles option."
                            % particles_star)
@@ -308,7 +319,7 @@ class LocalizedReconstruction():
                                                        particleImageSizeX,
                                                        particleImageSizeY,
                                                        args.randomize,
-                                                       args.output,
+                                                       args.output+"_tmp",
                                                        args.unique,
                                                        len(mdOut),
                                                        args.align_subparticles,
@@ -341,9 +352,9 @@ class LocalizedReconstruction():
             if args.extract_from_micrographs:
                 if not args.create_subparticles:
                     md = MetaData(args.output + "/particles.star")                    
-                extract_subparticles(args.subparticle_size, args.rescale_size, args.float16, args.no_ramp, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.invert_contrast, args.normalize, False, getattr(md,particleTableName)[0].rlnMicrographName.split('/')[-2])
+                extract_subparticles(args.subparticle_size, args.rescale_size, args.float16, args.no_ramp, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.invert_contrast, args.normalize, args.output+"_tmp")
             else:
-                extract_subparticles(args.subparticle_size, args.rescale_size, args.float16,  args.no_ramp, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.invert_contrast, args.normalize, True, args.output)
+                extract_subparticles(args.subparticle_size, args.rescale_size, args.float16,  args.no_ramp, args.np, args.masked_map, args.output, args.library_path, args.only_extract_unfinished, args.invert_contrast, args.normalize, args.output+"_tmp")
             print("\nFinished extracting the subparticles!\n")
 
         if args.reconstruct_subparticles:

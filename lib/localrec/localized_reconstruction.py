@@ -427,7 +427,7 @@ def splitMrcStack(stackFile, outFile):
     mrcsFile.close()
     mrcFile.close()
 
-def split_particle_stacks(extract_from_micrographs, angpix, inputStar, inputStack, output, filename_prefix, deleteStack):
+def split_particle_stacks(extract_from_micrographs, angpix, inputStar, inputStack, tmp_output, filename_prefix, deleteStack):
     """ Read a STAR file with particles and write as individual images.
     If a stack of images is given, use these instead of the images from the STAR file.
     Also write a new STAR file pointing to these images.
@@ -450,13 +450,13 @@ def split_particle_stacks(extract_from_micrographs, angpix, inputStar, inputStac
     progressbar = ProgressBar(width=60, total=len(md))
 
     for i, particle in enumerate(md, start=1):
-        outputImageName = '%s/%s_%06d.mrc' % (output, filename_prefix, i)
+        outputImageName = '%s/%s_%06d.mrc' % (tmp_output, filename_prefix, i)
 
         # split stacks only if not extracting directly from micrographs
         if not extract_from_micrographs:
             if inputStack:
                 splitMrcStack('%06d@%s' %(i, inputStack), outputImageName)
-                particle.rlnOriginalParticleName = '%s/%06d@%s' %(output, i, inputStack)
+                particle.rlnOriginalParticleName = '%s/%06d@%s' %(tmp_output, i, inputStack)
             else:
                 splitMrcStack(particle.rlnImageName, outputImageName)
                 particle.rlnOriginalParticleName = particle.rlnImageName
@@ -464,31 +464,31 @@ def split_particle_stacks(extract_from_micrographs, angpix, inputStar, inputStac
             particle.rlnMicrographName = outputImageName
         else:
             particle.rlnOriginalParticleName = particle.rlnImageName
-            particle.rlnImageName = '%s/%s' % (output, particle.rlnMicrographName.split('/').pop())
+            particle.rlnImageName = '%s/%s' % (tmp_output, particle.rlnMicrographName.split('/').pop())
 
         progressbar.notify()
 
     print("\n")
-    md.write("%s/%s.star" % (output, filename_prefix))
+    md.write("%s/%s.star" % (tmp_output, filename_prefix))
 
     if inputStack and deleteStack:
         cleanPath(inputStack)
 
 
 
-def create_initial_stacks(input_star, angpix, masked_map, output, extract_from_micrographs, library_path):
+def create_initial_stacks(input_star, angpix, masked_map, tmp_output, extract_from_micrographs, library_path):
     """ Create initial particle stacks (and STAR files) to be used
     for extraction of subparticles. If the masked_map is passed,
     another stack with subtracted particles will be created. """
 
     print(" Creating particle images from which nothing is subtracted...")
-    split_particle_stacks(extract_from_micrographs, angpix, input_star, None, output, 'particles', deleteStack=False)
+    split_particle_stacks(extract_from_micrographs, angpix, input_star, None, tmp_output, 'particles', deleteStack=False)
 
     if masked_map:
         print(" Creating particle images from which the projections of the masked "
               "particle reconstruction have been subtracted...")
 
-        subtractedStackRoot = "%s/particles_subtracted" % output
+        subtractedStackRoot = "%s/particles_subtracted" % tmp_output
 
         md = MetaData(input_star)
         if md.version == "3.1":
@@ -508,10 +508,10 @@ def create_initial_stacks(input_star, angpix, masked_map, output, extract_from_m
 
         subtractedStack = subtractedStackRoot + '.mrcs'
 
-        split_particle_stacks(extract_from_micrographs, angpix, input_star, subtractedStack, output, 'particles_subtracted', deleteStack=True)
+        split_particle_stacks(extract_from_micrographs, angpix, input_star, subtractedStack, tmp_output, 'particles_subtracted', deleteStack=True)
 
 
-def extract_subparticles(subpart_size, rescale_size, float16, no_ramp, np, masked_map, output, library_path, only_extract_unfinished, invert_contrast, normalize, deleteParticles, outDir):
+def extract_subparticles(subpart_size, rescale_size, float16, no_ramp, np, masked_map, output, library_path, only_extract_unfinished, invert_contrast, normalize, outDirTmp):
     """ Extract subparticles images from each particle
     (Using 'relion_preprocess' as if the particle was a micrograph.
     Notice that this command line works only in Relion 1.4, not 2.0"""
@@ -543,15 +543,14 @@ def extract_subparticles(subpart_size, rescale_size, float16, no_ramp, np, maske
         additional_parameters = additional_parameters+' --scale '+str(rescale_size)
 
     def run_extract(suffix=''):
-        args = ('--i "%s/micrographs%s.star" --part_star subparticles_tmp.star --extract --extract_size %s --reextract_data_star '
-                '"%s%s.star" %s') % (output, suffix, subpart_size, output, suffix, additional_parameters)
+        args = ('--i "%s/micrographs%s.star" --part_star subparticles_tmp.star --part_dir %s --extract --extract_size %s --reextract_data_star '
+                '"%s%s.star" %s') % (output, suffix, output, subpart_size, output, suffix, additional_parameters)
         run_command(cmd + args, "", library_path)
 
         print(" Cleaning up temporary files...")
 
         md = MetaData('subparticles_tmp.star')
-        for particle in md:
-            particle.rlnImageName = particle.rlnImageName.replace('Particles/%s' % outDir, output)
+        # write locrecon run params as comment in the star header
         md.write('%s%s.star' % (output,suffix))
 
         try:
@@ -559,21 +558,13 @@ def extract_subparticles(subpart_size, rescale_size, float16, no_ramp, np, maske
         except OSError:
             pass
 
-        if deleteParticles:
-            cleanPattern('%s/particles%s_??????.mrc' % (output, suffix))
+        # remove tmp dir
+        shutil.rmtree(outDirTmp)
 
     run_extract()  # Run extraction without subtracted density
 
     if masked_map:
         run_extract('_subtracted')
-
-    print(" Moving subparticles to the output directory...")
-
-    files = os.listdir('Particles/%s' % outDir)
-    for f in files:
-        os.rename('Particles/%s/%s' % (outDir, f), '%s/%s' % (output, f))
-    os.rmdir('Particles/%s' % outDir)
-
 
 
 def write_output_starfiles(labels, mdOut, mdOutSub, output):
