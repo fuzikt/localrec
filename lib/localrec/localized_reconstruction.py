@@ -558,14 +558,13 @@ def extract_subparticles(subpart_size, rescale_size, float16, no_ramp, np, maske
         except OSError:
             pass
 
-        # remove tmp dir
-        shutil.rmtree(outDirTmp)
-
     run_extract()  # Run extraction without subtracted density
 
     if masked_map:
         run_extract('_subtracted')
 
+    # remove tmp dir
+    shutil.rmtree(outDirTmp)
 
 def write_output_starfiles(labels, mdOut, mdOutSub, output):
 
