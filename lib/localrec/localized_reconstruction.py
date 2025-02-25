@@ -555,6 +555,7 @@ def extract_subparticles(subpart_size, rescale_size, float16, no_ramp, np, maske
 
         try:
             os.remove('%s.star' % 'subparticles_tmp')
+            os.remove('%s/micrographs%s.star' % (output, suffix))
         except OSError:
             pass
 
