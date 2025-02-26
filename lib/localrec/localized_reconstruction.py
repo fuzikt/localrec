@@ -405,6 +405,12 @@ def splitMrcStack(stackFile, outFile):
 
     # get image size
     imageSize = int(struct.unpack('i', mrcsFile.read(4))[0])
+    mrcsFile.seek(12, 0)
+    mrcMode = int(struct.unpack('i', mrcsFile.read(4))[0])
+    if mrcMode == 2:
+        floatSize = 4 #float32 => 4 bytes
+    elif mrcMode == 12:
+        floatSize = 2 #float16 => 2 bytes
 
     # write header
     mrcsFile.seek(0, 0)
@@ -419,8 +425,8 @@ def splitMrcStack(stackFile, outFile):
     mrcFile.seek(1024, 0)
 
     # write mrc data file
-    mrcsFile.seek(imageSize ** 2 * 4 * (imageIndex - 1) + 1024, 0)
-    chunkSize = imageSize ** 2 * 4
+    mrcsFile.seek(imageSize ** 2 * floatSize * (imageIndex - 1) + 1024, 0)
+    chunkSize = imageSize ** 2 * floatSize
     mrcImage = mrcsFile.read(chunkSize)
     mrcFile.write(mrcImage)
 
