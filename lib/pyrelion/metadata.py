@@ -20,6 +20,7 @@
 # **************************************************************************
 
 import sys
+import ast
 
 try:
     # Python 2
@@ -638,6 +639,15 @@ LABELS = {
     'rlnTomoTiltMovieFile': str,  # Movie containing the frames of a tilt
     'rlnMicrographNameEven': str,  # Micrograph summed from even frames of motion corrected movie
     'rlnMicrographNameOdd': str,  # Micrograph summed from odd frames of motion corrected movie
+    # non-standard RELION labels
+    'rlnOriginXAngstDiff': float,  # Distribution of the X-coordinate (in Angstrom) between 2 particles from analyze_orientation_distances_star.py
+    'rlnOriginYAngstDiff': float,  # Difference in the Y-shifts (in Angstrom) between 2 particles from analyze_orientation_distances_star.py
+    'rlnAngleRotDiff': float,  # Difference in the first Euler angle (rot) between 2 particles from analyze_orientation_distances_star.py
+    'rlnAngleTiltDiff': float,  # Difference in the second Euler angle (tilt) between 2 particles from analyze_orientation_distances_star.py
+    'rlnAnglePsiDiff': float,  # Difference in the third Euler angle (psi) between 2 particles from analyze_orientation_distances_star.py
+    'rlnSpatDist': float,  # Spatial distances between 2 particles from analyze_orientation_distances_star.py
+    'rlnAngDist': float,  # Angular distances between 2 particles from analyze_orientation_distances_star.py
+    'rlnResult': float,  # General result label to store float values
 }
 
 
@@ -701,7 +711,21 @@ class MetaData:
 
     def _setItemValue(self, item, label, value):
         if label.type == int:
+            # this is a workaround for starfile module storing ints as floats
             setattr(item, label.name, label.type(float(value)))
+        elif label.type == bool:
+            # Convert string/numeric 0/1 to proper boolean values
+            if value in ('0', 0):
+                setattr(item, label.name, False)
+            elif value in ('1', 1):
+                setattr(item, label.name, True)
+        elif label.type == str:
+            #try to dynamically evaluate the type (as str is the default for unknown types)
+            try:
+                setattr(item, label.name, ast.literal_eval(value))
+                label.type = type(ast.literal_eval(value))
+            except:
+                setattr(item, label.name, label.type(value))
         else:
             setattr(item, label.name, label.type(value))
 
@@ -714,7 +738,10 @@ class MetaData:
         found_loop = False
         non_loop_values = []
 
-        f = open(input_star)
+        if input_star == "STDIN":
+            f = sys.stdin
+        else:
+            f = open(input_star)
 
         def setItemValues(currentTableRead, values):
             # Iterate in pairs (zipping) over labels and values in the row
@@ -774,7 +801,7 @@ class MetaData:
             self.comments.insert(0, "# " + ' '.join(sys.argv) + "\n")
 
         # write comments in the beginning of the file
-        self.comments = set(self.comments)
+        self.comments = list(dict.fromkeys(self.comments))  # removes duplicates while preserving order
         for comment in self.comments:
             output_file.write(comment + "\n")
 
@@ -784,7 +811,6 @@ class MetaData:
                 line_format = ""
                 if self.version == "3.1":
                     if "_loop" not in attribute:
-                        #output_file.write("\n# version 30001\n\n%s\n\n" % attribute)
                         output_file.write("\n\n%s\n\n" % attribute)
                     if getattr(self, attribute + "_loop"):
                         output_file.write("loop_\n")
@@ -800,12 +826,16 @@ class MetaData:
                             line_format += "%%(%s)f \t" % l.name
                         elif t is int:
                             line_format += "%%(%s)d \t" % l.name
+                        elif t is bool:
+                            line_format += "%%(%s)d \t" % l.name
                         else:
                             line_format += "%%(%s)s \t" % l.name
                     else:
                         if t is float:
                             line_format = "_%-35s%15f\n"
                         elif t is int:
+                            line_format = "_%-35s%15d\n"
+                        elif t is bool:
                             line_format = "_%-35s%15d\n"
                         else:
                             line_format = "_%-35s%15s\n"
@@ -818,9 +848,12 @@ class MetaData:
                         output_file.write(line_format % item.__dict__)
 
     def write(self, output_star):
-        output_file = open(output_star, 'w')
-        self._write(output_file)
-        output_file.close()
+        if output_star == "STDOUT":
+            self._write(sys.stdout)
+        else:
+            output_file = open(output_star, 'w')
+            self._write(output_file)
+            output_file.close()
 
     def printStar(self):
         self._write(sys.stdout)
