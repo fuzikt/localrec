@@ -43,7 +43,7 @@ from os.path import basename
 from os.path import exists
 from os.path import isdir
 from os.path import islink
-from ..pyrelion import MetaData
+from ..pyrelion import MetaData, Item
 
 
 def cleanPath(*paths):
@@ -728,9 +728,6 @@ def unique_micrographs(md, outputPath, outputStar):
         particleTableName = "data_"
         mdUniqueMicrographs.addDataTable("data_", True)
         mdUniqueMicrographs.addLabels("data_", "rlnMicrographName", "rlnMagnification", "rlnDetectorPixelSize" )
-
-    class Item:
-        pass
 
     for particle in md:
         if particle.rlnMicrographName not in seen:
